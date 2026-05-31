@@ -137,42 +137,38 @@ html, body {
 .splash-hint { color: var(--text-dim); font-size: 14px; letter-spacing: 0.5px; }
 
 /* MENU ------------------------------------------------------- */
+/* The banner art (menu-bg.jpg) carries the SUIKA MERGE title + hero fruits;
+   we anchor it to the top and dock the controls over a dark scrim at the bottom. */
+#menu {
+  align-items: stretch;
+  background:
+    linear-gradient(to top,
+      rgba(13, 8, 32, 0.97) 0%,
+      rgba(13, 8, 32, 0.80) 20%,
+      rgba(13, 8, 32, 0.32) 40%,
+      rgba(13, 8, 32, 0.05) 58%,
+      transparent 72%),
+    url('assets/images/menu-bg.jpg') center top / cover no-repeat,
+    var(--bg-0);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
 .menu-inner {
-  width: min(420px, 100%);
+  width: 100%;
+  max-width: 460px;
+  margin: 0 auto;
   text-align: center;
-  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 24px 24px 26px;
 }
 
-.menu-title {
-  font-size: 68px;
-  font-weight: 900;
-  letter-spacing: 7px;
-  background: linear-gradient(180deg, #fff 0%, var(--accent-2) 45%, var(--accent) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  filter: drop-shadow(0 6px 22px rgba(255, 95, 162, 0.45));
-}
-
-.menu-subtitle {
-  margin-top: -4px;
-  font-size: 13px;
-  letter-spacing: 5px;
-  color: var(--text-dim);
-  text-transform: uppercase;
-}
-
-.menu-emoji {
-  margin: 14px 0 8px;
-  animation: bob 2.6s ease-in-out infinite;
-  filter: drop-shadow(0 18px 32px rgba(44, 227, 176, 0.5));
-}
-
-.menu-emoji img {
-  width: 128px;
-  height: 128px;
-  object-fit: contain;
-}
+/* title, subtitle and hero fruit are baked into the banner image */
+.menu-title,
+.menu-subtitle,
+.menu-emoji { display: none; }
 
 .menu-highscore {
   font-size: 18px;

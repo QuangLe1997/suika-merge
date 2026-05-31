@@ -2,6 +2,11 @@
 
 import { FRUITS } from '../config/fruits.js';
 
+// non-fruit images to preload (backgrounds, banners)
+export const UI_IMAGES = {
+  menuBg: 'assets/images/menu-bg.jpg',
+};
+
 class _AssetManager {
   constructor() {
     this.images = {}; // sprite path -> HTMLImageElement
@@ -11,7 +16,10 @@ class _AssetManager {
   // Returns a promise resolving when all sprites are loaded (or errored).
   // onProgress(loaded, total) is called as each finishes.
   preload(onProgress) {
-    const paths = FRUITS.filter(Boolean).map(f => f.sprite);
+    const paths = [
+      ...FRUITS.filter(Boolean).map(f => f.sprite),
+      ...Object.values(UI_IMAGES),
+    ];
     const total = paths.length;
     let loaded = 0;
 

@@ -593,8 +593,8 @@ export class GameScene {
     ctx.rotate(rot);
 
     if (img && img.complete && img.naturalWidth) {
-      // sprite incl. its white sticker outline sits a touch larger than the collision circle
-      const size = r * 2 * 1.16;
+      // realistic cut-out fills its frame tightly; draw close to the collision diameter
+      const size = r * 2 * 1.06;
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(img, -size / 2, -size / 2, size, size);
