@@ -128,7 +128,7 @@ export class GameScene {
 
     // merge
     this.merge = new MergeSystem(this.physics, this.factory, {
-      onMerge: (fromLvl, newLvl, x, y, mergedFruit) => this._onMerge(fromLvl, newLvl, x, y, mergedFruit),
+      onMerge: (fromLvl, newLvl, x, y, mergedFruit, opts) => this._onMerge(fromLvl, newLvl, x, y, mergedFruit, opts),
       onImpact: (fruit, speed) => {
         // soft thud on hard landings (throttled inside Fruit.onImpact already)
         if (speed > 12 && fruit && performance.now() - (this._lastThud || 0) > 70) {
@@ -279,8 +279,9 @@ export class GameScene {
   }
 
   // ----- merge callback -----
-  _onMerge(fromLvl, newLvl, x, y, mergedFruit) {
+  _onMerge(fromLvl, newLvl, x, y, mergedFruit, opts = {}) {
     const cfg = getFruit(newLvl);
+    const triple = !!opts.triple;
     const { added, combo } = this.score.addMerge(newLvl);
 
     // sfx + pitch
@@ -298,13 +299,31 @@ export class GameScene {
     // pop the new fruit a bit harder for big merges
     if (mergedFruit) mergedFruit.pop(0.5 + newLvl * 0.02);
 
-    // score popup — color & size scale with combo, tasteful
-    const popColor = combo >= 3 ? '#ffd35c' : (combo >= 2 ? cfg.glow : '#ffffff');
-    this.popups.add(`+${added}`, x, y - cfg.radius * 0.5, {
-      color: popColor, size: 20 + newLvl + combo * 2, life: 1.1,
-    });
+    // ---- TRIPLE merge (3+ fruit at once): jackpot — extra bonus + big "wow" ----
+    if (triple) {
+      const tripleBonus = Math.round(added * 1.5 + (opts.count - 3) * 40);
+      this.score.score += tripleBonus;
+      // layered shockwaves + flash + confetti
+      this.particles.flash(x, y, cfg.radius * 2.6, 'rgba(255,255,255,0.95)');
+      this.particles.shockwave(x, y, '#ffffff', cfg.radius * 3.8, 6);
+      this.particles.shockwave(x, y, this.theme.accent, cfg.radius * 5.0, 4);
+      this.particles.confetti(x, y, themeCols);
+      this.particles.confetti(x - 50, y - 20, themeCols);
+      this.particles.confetti(x + 50, y - 20, themeCols);
+      this.shake.trigger(Math.min(20, 9 + newLvl), 0.42);
+      AudioManager.playNewRecord();
+      this._showBanner(opts.count >= 4 ? `MEGA ×${opts.count}!` : 'TRIPLE!', this.theme.accent2);
+      this.popups.add(`+${added + tripleBonus}`, x, y - cfg.radius * 0.6, { color: '#ff8ec0', size: 26 + newLvl, life: 1.3 });
+      this._flyCoins(6 + newLvl * 2, x, y);
+    } else {
+      // score popup — color & size scale with combo, tasteful
+      const popColor = combo >= 3 ? '#ffd35c' : (combo >= 2 ? cfg.glow : '#ffffff');
+      this.popups.add(`+${added}`, x, y - cfg.radius * 0.5, {
+        color: popColor, size: 20 + newLvl + combo * 2, life: 1.1,
+      });
+    }
 
-    if (combo >= 2) this._showCombo(combo);
+    if (combo >= 2 && !triple) this._showCombo(combo);
 
     // progression tracking (stats + daily challenge)
     ProgressManager.noteMerge(newLvl);
@@ -392,6 +411,19 @@ export class GameScene {
     this.comboEl.style.animation = 'pop-in 0.35s cubic-bezier(0.17, 0.85, 0.4, 1.6) both';
     clearTimeout(this._comboTo);
     this._comboTo = setTimeout(() => this.comboEl.classList.add('hidden'), 900);
+  }
+
+  // generic centered banner (TRIPLE!, MEGA!, ...) reusing the combo banner node
+  _showBanner(text, color) {
+    const el = this.comboEl;
+    el.textContent = text;
+    if (color) el.style.color = color;
+    el.classList.remove('hidden');
+    el.style.animation = 'none';
+    void el.offsetWidth;
+    el.style.animation = 'pop-in 0.4s cubic-bezier(0.17, 0.85, 0.4, 1.7) both';
+    clearTimeout(this._comboTo);
+    this._comboTo = setTimeout(() => { el.classList.add('hidden'); el.style.color = ''; }, 1200);
   }
 
   // ----- coins & wallet -----

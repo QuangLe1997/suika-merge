@@ -20,17 +20,26 @@ export class MergeSystem {
   unregister(fruit) { this.fruits.delete(fruit); }
 
   _onCollision(event) {
+    // adjacency of same-level, mergeable fruit touching THIS step
+    const adj = new Map(); // fruit -> Set(neighbours)
+    const involved = new Set();
+    const link = (fa, fb) => {
+      if (!adj.has(fa)) adj.set(fa, new Set());
+      if (!adj.has(fb)) adj.set(fb, new Set());
+      adj.get(fa).add(fb);
+      adj.get(fb).add(fa);
+      involved.add(fa);
+      involved.add(fb);
+    };
+
     for (const pair of event.pairs) {
       const a = pair.bodyA;
       const b = pair.bodyB;
       const fa = a.fruitRef;
       const fb = b.fruitRef;
 
-      // squash-&-stretch on ANY fruit contact (fruit-fruit or fruit-wall),
-      // scaled by impact speed → realistic deform at high & low speeds
-      const relVx = (a.velocity.x - b.velocity.x);
-      const relVy = (a.velocity.y - b.velocity.y);
-      const impact = Math.hypot(relVx, relVy);
+      // squash-&-stretch on ANY fruit contact (fruit-fruit or fruit-wall)
+      const impact = Math.hypot(a.velocity.x - b.velocity.x, a.velocity.y - b.velocity.y);
       if (fa) fa.onImpact(impact);
       if (fb) fb.onImpact(impact);
       if (this.cb.onImpact && impact > 6) this.cb.onImpact(fa || fb, impact);
@@ -39,22 +48,52 @@ export class MergeSystem {
       if (fa.merging || fb.merging) continue;
       if (fa.level !== fb.level) continue;
       if (fa.level >= MAX_LEVEL) continue;
+      link(fa, fb);
+    }
 
-      // mark as merging now to avoid double-merge in same step
-      fa.merging = true;
-      fb.merging = true;
+    if (!involved.size) return;
 
-      const x = (a.position.x + b.position.x) / 2;
-      const y = (a.position.y + b.position.y) / 2;
-      const newLevel = getNextLevel(fa.level);
+    // group touching same-level fruit into clusters (connected components).
+    // cluster of 2 → normal merge; 3+ → TRIPLE merge (skips a tier) for a big "wow".
+    const visited = new Set();
+    for (const start of involved) {
+      if (visited.has(start)) continue;
+      const group = [];
+      const queue = [start];
+      visited.add(start);
+      while (queue.length) {
+        const f = queue.shift();
+        group.push(f);
+        for (const nb of adj.get(f)) {
+          if (!visited.has(nb)) { visited.add(nb); queue.push(nb); }
+        }
+      }
+      if (group.length < 2) continue;
 
-      this.pendingRemovals.push(fa, fb);
-      this.pendingSpawns.push({ x, y, fromLevel: fa.level, newLevel, momentum: {
-        // tiny inheritance of horizontal motion only — no upward kick (was launching fruits out)
-        // NOTE: Matter.Body.setVelocity expects {x, y} not {vx, vy}
-        x: (a.velocity.x + b.velocity.x) * 0.15,
-        y: 0,
-      }});
+      let sx = 0, sy = 0, vx = 0, vy = 0;
+      for (const f of group) {
+        f.merging = true;
+        sx += f.body.position.x;
+        sy += f.body.position.y;
+        vx += f.body.velocity.x;
+        vy += f.body.velocity.y;
+        this.pendingRemovals.push(f);
+      }
+      const n = group.length;
+      const fromLevel = group[0].level;
+      const triple = n >= 3;
+      // triple jumps TWO tiers (a satisfying jackpot); pair jumps one
+      const newLevel = triple ? Math.min(fromLevel + 2, MAX_LEVEL) : getNextLevel(fromLevel);
+
+      this.pendingSpawns.push({
+        x: sx / n,
+        y: sy / n,
+        fromLevel,
+        newLevel,
+        count: n,
+        triple,
+        momentum: { x: (vx / n) * 0.15, y: 0 },
+      });
     }
   }
 
@@ -76,7 +115,7 @@ export class MergeSystem {
       // a little upward kick for that "pop" feel
       M.Body.setVelocity(fruit.body, s.momentum);
       this.register(fruit);
-      if (this.cb.onMerge) this.cb.onMerge(s.fromLevel, s.newLevel, s.x, s.y, fruit);
+      if (this.cb.onMerge) this.cb.onMerge(s.fromLevel, s.newLevel, s.x, s.y, fruit, { triple: s.triple, count: s.count });
     }
     this.pendingSpawns.length = 0;
   }
