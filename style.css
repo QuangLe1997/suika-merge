@@ -145,15 +145,14 @@ html, body {
   justify-content: stretch;
   padding: 0;
   background:
+    radial-gradient(120% 42% at 50% 62%, rgba(11, 7, 28, 0.55), transparent 70%),
     linear-gradient(to top,
-      rgba(11, 7, 28, 0.96) 0%,
-      rgba(11, 7, 28, 0.72) 16%,
-      rgba(11, 7, 28, 0.18) 34%,
-      transparent 50%),
+      rgba(11, 7, 28, 0.70) 0%,
+      rgba(11, 7, 28, 0.30) 18%,
+      transparent 40%),
     linear-gradient(to bottom,
-      rgba(11, 7, 28, 0.55) 0%,
-      rgba(11, 7, 28, 0.12) 14%,
-      transparent 28%),
+      rgba(11, 7, 28, 0.50) 0%,
+      transparent 22%),
     url('assets/images/menu-bg.jpg') center top / cover no-repeat,
     var(--bg-0);
   backdrop-filter: none;
@@ -236,12 +235,13 @@ html, body {
   50% { transform: scale(1.25); opacity: 0.7; }
 }
 
-/* --- bottom dock --- */
+/* --- dock: sits in the banner's reserved lower-center space (not glued to the
+   bottom, so the screen never looks empty) --- */
 .menu-dock {
   position: absolute;
   left: 50%;
-  bottom: max(26px, env(safe-area-inset-bottom));
-  transform: translateX(-50%);
+  top: 61%;
+  transform: translate(-50%, -50%);
   width: min(420px, calc(100% - 40px));
   display: flex;
   flex-direction: column;
