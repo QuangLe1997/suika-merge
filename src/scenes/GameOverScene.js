@@ -10,6 +10,7 @@ export class GameOverScene {
     this.scoreEl = document.getElementById('goScore');
     this.bestEl = document.getElementById('goBest');
     this.coinsEl = document.getElementById('goCoins');
+    this.levelEl = document.getElementById('goLevel');
     this.btnRevive = document.getElementById('btnRevive');
     this.btnPlayAgain = document.getElementById('btnPlayAgain');
     this.btnShare = document.getElementById('btnShareScore');
@@ -26,6 +27,7 @@ export class GameOverScene {
     this.scoreEl.textContent = payload.score || 0;
     this.bestEl.textContent = SaveManager.getHighScore(payload.mode || 'normal');
     this.coinsEl.textContent = payload.coins || 0;
+    if (this.levelEl) this.levelEl.textContent = payload.level || 1;
     this.titleEl.textContent = payload.newRecord ? 'NEW RECORD!' : 'GAME OVER';
     this.titleEl.classList.toggle('newrec', !!payload.newRecord);
 

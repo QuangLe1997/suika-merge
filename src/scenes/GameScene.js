@@ -1,7 +1,8 @@
 // GameScene — core gameplay loop, rendering, input.
 
 import { PLAY_AREA, CONTAINER, DROP, DIFFICULTY, DANGER_LINE_OFFSET, SCORING } from '../config/constants.js';
-import { FRUITS, getFruit, randomDropLevel } from '../config/fruits.js';
+import { FRUITS, getFruit, randomDropLevel, DROPPABLE_LEVELS } from '../config/fruits.js';
+import { THEMES, levelForScore, themeForLevel, difficultyForLevel, nextThreshold } from '../config/themes.js';
 import { PhysicsSystem } from '../systems/PhysicsSystem.js';
 import { MergeSystem } from '../systems/MergeSystem.js';
 import { ScoreSystem } from '../systems/ScoreSystem.js';
@@ -9,6 +10,7 @@ import { FruitFactory } from '../entities/FruitFactory.js';
 import { ParticleSystem } from '../effects/Particles.js';
 import { PopupSystem } from '../effects/Popups.js';
 import { ScreenShake } from '../effects/ScreenShake.js';
+import { CoinFly } from '../effects/CoinFly.js';
 import { AudioManager } from '../managers/AudioManager.js';
 import { SaveManager } from '../managers/SaveManager.js';
 import { EconomyManager } from '../managers/EconomyManager.js';
@@ -33,6 +35,13 @@ export class GameScene {
     this.freezeEl = document.getElementById('boostFreeze');
     this.boosterBtns = document.querySelectorAll('.booster-btn');
 
+    // level + wallet HUD
+    this.walletEl = document.getElementById('hudWallet');
+    this.walletCountEl = document.getElementById('hudWalletCount');
+    this.levelEl = document.getElementById('hudLevel');
+    this.levelFillEl = document.getElementById('hudLevelFill');
+    this.levelBanner = document.getElementById('levelBanner');
+
     this.optMusic = document.getElementById('optMusic');
     this.optSfx = document.getElementById('optSfx');
     this.optVibe = document.getElementById('optVibe');
@@ -41,6 +50,7 @@ export class GameScene {
     this.particles = new ParticleSystem();
     this.popups = new PopupSystem();
     this.shake = new ScreenShake();
+    this.coinFly = new CoinFly();
 
     // bindings
     this.btnPause.addEventListener('click', () => this.pause());
@@ -115,17 +125,39 @@ export class GameScene {
     // merge
     this.merge = new MergeSystem(this.physics, this.factory, {
       onMerge: (fromLvl, newLvl, x, y, mergedFruit) => this._onMerge(fromLvl, newLvl, x, y, mergedFruit),
+      onImpact: (fruit, speed) => {
+        // soft thud on hard landings (throttled inside Fruit.onImpact already)
+        if (speed > 12 && fruit && performance.now() - (this._lastThud || 0) > 70) {
+          this._lastThud = performance.now();
+          AudioManager.playThud?.(Math.min(1, speed / 40), fruit.level);
+        }
+      },
     });
+
+    // level + theme
+    this.level = 1;
+    this.theme = themeForLevel(1);
+    this.levelDiff = difficultyForLevel(1);
+    this.bgImg = AssetManager.get(this.theme.bg);
+    this.bgPrev = null;          // crossfade source
+    this.bgFade = 1;             // 1 = fully on current bg
+    this.dangerHoldTime = this.diff.dangerHoldTime * this.levelDiff.dangerHoldMul;
+
+    // coins earned this run (animated into wallet)
+    this.runCoins = 0;
+    this.walletCount = EconomyManager.coins;
+    this._updateWalletUI();
 
     // state
     this.gameOver = false;
     this.paused = false;
     this.dropX = PLAY_AREA.width / 2;
     this.dropCooldown = 0;
-    this.currentDropLevel = randomDropLevel();
-    this.nextDropLevel = randomDropLevel();
+    this.currentDropLevel = this._randomDrop();
+    this.nextDropLevel = this._randomDrop();
     this.activeBooster = null;
     this.revivesUsed = 0;
+    this.coinFly.clear();
 
     // boosters: load from economy, but apply min starting per difficulty
     this.boosters = { ...EconomyManager.getBoosters() };
@@ -199,6 +231,15 @@ export class GameScene {
     this.dropX = Math.max(min, Math.min(max, x));
   }
 
+  _randomDrop() {
+    // weighted toward smaller fruit; widen range as level rises
+    const max = (this.levelDiff && this.levelDiff.dropMax) || DROPPABLE_LEVELS.length;
+    const pool = DROPPABLE_LEVELS.slice(0, max);
+    // mild bias toward lower levels (keeps the game flowing & scoring)
+    const idx = Math.floor(Math.pow(Math.random(), 1.35) * pool.length);
+    return pool[Math.min(idx, pool.length - 1)];
+  }
+
   _tryDrop() {
     if (this.dropCooldown > 0) return;
     const lvl = this.currentDropLevel;
@@ -206,10 +247,10 @@ export class GameScene {
     const fruit = this.factory.create(lvl, this.dropX, DROP.spawnY);
     this.merge.register(fruit);
     AudioManager.playDrop();
-    this.particles.drop(this.dropX, DROP.spawnY + cfg.radius);
+    this.particles.drop(this.dropX, DROP.spawnY + cfg.radius, this.theme.glow);
     this.dropCooldown = DROP.cooldownMs;
     this.currentDropLevel = this.nextDropLevel;
-    this.nextDropLevel = randomDropLevel();
+    this.nextDropLevel = this._randomDrop();
     this._refreshNextPreview();
   }
 
@@ -222,26 +263,47 @@ export class GameScene {
     AudioManager.playMerge(newLvl);
     if (combo >= 2) AudioManager.playCombo(combo);
 
-    // visuals
-    this.particles.burst(x, y, cfg.glow, newLvl);
-    if (newLvl >= 8) this.particles.confetti(x, y);
-    this.shake.trigger(Math.min(3 + newLvl * 0.8, 14), 0.18 + newLvl * 0.015);
-    this.popups.add(`+${added}`, x, y - cfg.radius * 0.4, { color: cfg.glow, size: 22 + newLvl });
+    // ---- WOW merge effect: flash → shockwave ring → burst → sparkle ----
+    const themeCols = this.theme.particles;
+    this.particles.flash(x, y, cfg.radius * 1.6, 'rgba(255,255,255,0.9)');
+    this.particles.shockwave(x, y, cfg.glow, cfg.radius * 2.4, 5);
+    if (newLvl >= 6) this.particles.shockwave(x, y, this.theme.accent2, cfg.radius * 3.2, 3);
+    this.particles.burst(x, y, [cfg.glow, ...themeCols], newLvl);
+    this.shake.trigger(Math.min(3 + newLvl * 0.9, 15), 0.16 + newLvl * 0.016);
 
-    if (combo >= 2) {
-      this._showCombo(combo);
+    // pop the new fruit a bit harder for big merges
+    if (mergedFruit) mergedFruit.pop(0.5 + newLvl * 0.02);
+
+    // score popup — color & size scale with combo, tasteful
+    const popColor = combo >= 3 ? '#ffd35c' : (combo >= 2 ? cfg.glow : '#ffffff');
+    this.popups.add(`+${added}`, x, y - cfg.radius * 0.5, {
+      color: popColor, size: 20 + newLvl + combo * 2, life: 1.1,
+    });
+
+    if (combo >= 2) this._showCombo(combo);
+
+    // earn coins on bigger merges → fly into wallet
+    if (newLvl >= 5) {
+      const coins = Math.round((newLvl - 4) * 1.5 * (this.diff.coinReward || 1));
+      if (coins > 0) this._flyCoins(coins, x, y);
     }
 
+    if (newLvl >= 8) this.particles.confetti(x, y, themeCols);
+
     if (newLvl >= 11) {
-      // ultimate watermelon!
-      this.popups.add('WATERMELON!', PLAY_AREA.width / 2, PLAY_AREA.height / 2, { color: '#06d6a0', size: 36 });
-      this.particles.confetti(x, y);
-      this.particles.confetti(x - 60, y - 30);
-      this.particles.confetti(x + 60, y - 30);
-      this.shake.trigger(18, 0.5);
+      // ultimate watermelon celebration
+      this.popups.add('WATERMELON!', PLAY_AREA.width / 2, PLAY_AREA.height * 0.42, { color: this.theme.glow, size: 40, life: 1.6 });
+      this.particles.flash(x, y, 240, 'rgba(255,255,255,0.9)');
+      this.particles.shockwave(x, y, '#ffffff', 320, 6);
+      this.particles.confetti(x, y, themeCols);
+      this.particles.confetti(x - 70, y - 30, themeCols);
+      this.particles.confetti(x + 70, y - 30, themeCols);
+      this.shake.trigger(20, 0.55);
+      this._flyCoins(20, x, y);
     }
 
     this._updateHUD();
+    this._checkLevelUp();
   }
 
   _showCombo(n) {
@@ -253,6 +315,101 @@ export class GameScene {
     this.comboEl.style.animation = 'pop-in 0.35s cubic-bezier(0.17, 0.85, 0.4, 1.6) both';
     clearTimeout(this._comboTo);
     this._comboTo = setTimeout(() => this.comboEl.classList.add('hidden'), 900);
+  }
+
+  // ----- coins & wallet -----
+  _walletTargetCoords() {
+    // convert the wallet HUD element's center → play-area coordinates
+    if (!this.walletEl || !this.canvas) return { x: PLAY_AREA.width - 60, y: 40 };
+    const wr = this.walletEl.getBoundingClientRect();
+    const cr = this.canvas.getBoundingClientRect();
+    const sx = PLAY_AREA.width / cr.width;
+    const sy = PLAY_AREA.height / cr.height;
+    return {
+      x: (wr.left + wr.width / 2 - cr.left) * sx,
+      y: (wr.top + wr.height / 2 - cr.top) * sy,
+    };
+  }
+
+  _flyCoins(amount, x, y) {
+    if (amount <= 0) return;
+    const target = this._walletTargetCoords();
+    const n = Math.min(amount, 16); // visual cap; still credit full amount
+    this.runCoins += amount;
+    EconomyManager.addCoins(amount); // credit immediately (persists even mid-run)
+    this.coinFly.spawn(n, x, y, target.x, target.y, {
+      stagger: 0.04,
+      onArrive: () => {
+        this.walletCount += Math.max(1, Math.round(amount / n));
+        this._updateWalletUI();
+        this._bumpWallet();
+        AudioManager.playCoin();
+        const t = this._walletTargetCoords();
+        this.particles.flash(t.x, t.y, 22, 'rgba(255,211,92,0.9)');
+      },
+      onAllDone: () => {
+        this.walletCount = EconomyManager.coins; // sync exact
+        this._updateWalletUI();
+      },
+    });
+  }
+
+  _updateWalletUI() {
+    if (this.walletCountEl) this.walletCountEl.textContent = this.walletCount;
+  }
+
+  _bumpWallet() {
+    if (!this.walletEl) return;
+    this.walletEl.classList.remove('bump');
+    void this.walletEl.offsetWidth;
+    this.walletEl.classList.add('bump');
+  }
+
+  // ----- level / theme -----
+  _checkLevelUp() {
+    const newLevel = levelForScore(this.score.score);
+    if (newLevel > this.level) {
+      this._levelUp(newLevel);
+    }
+  }
+
+  _levelUp(newLevel) {
+    this.level = newLevel;
+    const theme = themeForLevel(newLevel);
+    this.levelDiff = difficultyForLevel(newLevel);
+    this.dangerHoldTime = this.diff.dangerHoldTime * this.levelDiff.dangerHoldMul;
+
+    // crossfade background if the theme changed
+    if (theme.key !== this.theme.key) {
+      this.bgPrev = this.bgImg;
+      this.theme = theme;
+      this.bgImg = AssetManager.get(theme.bg);
+      this.bgFade = 0; // animate 0 → 1
+    } else {
+      this.theme = theme;
+    }
+
+    AudioManager.playLevelUp();
+    this.shake.trigger(8, 0.4);
+    this.particles.flash(PLAY_AREA.width / 2, PLAY_AREA.height / 2, 320, 'rgba(255,255,255,0.5)');
+
+    // level reward coins
+    this._flyCoins(15 + newLevel * 3, PLAY_AREA.width / 2, PLAY_AREA.height * 0.5);
+
+    // banner
+    this._showLevelBanner(newLevel, theme);
+    this._updateHUD();
+  }
+
+  _showLevelBanner(level, theme) {
+    if (!this.levelBanner) return;
+    this.levelBanner.textContent = `LEVEL ${level} · ${theme.name}`;
+    this.levelBanner.style.setProperty('--lvl-accent', theme.accent2);
+    this.levelBanner.classList.remove('hidden', 'show');
+    void this.levelBanner.offsetWidth;
+    this.levelBanner.classList.add('show');
+    clearTimeout(this._lvlTo);
+    this._lvlTo = setTimeout(() => this.levelBanner.classList.remove('show'), 2000);
   }
 
   // ----- boosters -----
@@ -386,9 +543,20 @@ export class GameScene {
     this.particles.update(dt);
     this.popups.update(dt);
     this.shake.update(dt);
+    this.coinFly.update(dt);
+
+    // background crossfade on theme change
+    if (this.bgFade < 1) this.bgFade = Math.min(1, this.bgFade + dt / 0.8);
 
     // danger / game over check
     this._checkDanger(dt);
+  }
+
+  // coins keep flying after game over too (so the wallet finishes filling)
+  updateOverlayFx(dt) {
+    this.coinFly.update(dt);
+    this.particles.update(dt);
+    this.popups.update(dt);
   }
 
   _checkDanger(dt) {
@@ -416,98 +584,109 @@ export class GameScene {
     const W = PLAY_AREA.width;
     const H = PLAY_AREA.height;
 
-    // background
-    const grad = ctx.createLinearGradient(0, 0, 0, H);
-    grad.addColorStop(0, '#1e1448');
-    grad.addColorStop(0.55, '#150a36');
-    grad.addColorStop(1, '#0a0524');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, W, H);
-
-    // soft stars
-    this._drawStars(ctx);
+    // ---- themed background (image cover + crossfade + scrim) ----
+    this._drawBackground(ctx, W, H);
 
     // shake
     const [sx, sy] = this.shake.getOffset();
     ctx.save();
     ctx.translate(sx, sy);
 
-    // container
     this._drawContainer(ctx);
-
-    // danger line
     this._drawDangerLine(ctx);
-
-    // drop guide
     this._drawDropGuide(ctx);
 
-    // fruits
-    for (const f of this.merge.fruits) {
-      this._drawFruit(ctx, f);
-    }
+    for (const f of this.merge.fruits) this._drawFruit(ctx, f);
 
-    // effects
     this.particles.draw(ctx);
+    this.coinFly.draw(ctx);
     this.popups.draw(ctx);
 
     ctx.restore();
   }
 
-  _drawStars(ctx) {
-    if (!this._stars) {
-      this._stars = Array.from({ length: 50 }, () => ({
-        x: Math.random() * PLAY_AREA.width,
-        y: Math.random() * PLAY_AREA.height * 0.6,
-        r: Math.random() * 1.4 + 0.4,
-        a: Math.random() * 0.5 + 0.2,
-      }));
+  _drawBackground(ctx, W, H) {
+    // base fallback gradient (also shows while images load)
+    const grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, '#1a1140');
+    grad.addColorStop(0.55, '#120a30');
+    grad.addColorStop(1, '#080418');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    // previous theme image fading out
+    if (this.bgPrev && this.bgFade < 1) {
+      ctx.globalAlpha = 1;
+      this._drawImageCover(ctx, this.bgPrev, W, H);
     }
-    ctx.save();
-    for (const s of this._stars) {
-      ctx.globalAlpha = s.a;
-      ctx.fillStyle = '#fff';
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-      ctx.fill();
+    // current theme image fading in
+    if (this.bgImg && this.bgImg.complete && this.bgImg.naturalWidth) {
+      ctx.globalAlpha = this.bgPrev ? this.bgFade : 1;
+      this._drawImageCover(ctx, this.bgImg, W, H);
+      ctx.globalAlpha = 1;
     }
-    ctx.restore();
+
+    // readability scrim (darken toward center where the pile sits)
+    const scrim = ctx.createRadialGradient(W / 2, H * 0.55, H * 0.18, W / 2, H * 0.55, H * 0.75);
+    scrim.addColorStop(0, this.theme.scrim || 'rgba(13,8,32,0.5)');
+    scrim.addColorStop(1, 'rgba(8,5,20,0.2)');
+    ctx.fillStyle = scrim;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  _drawImageCover(ctx, img, W, H) {
+    const ir = img.naturalWidth / img.naturalHeight;
+    const cr = W / H;
+    let dw, dh;
+    if (ir > cr) { dh = H; dw = H * ir; } else { dw = W; dh = W / ir; }
+    ctx.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh);
   }
 
   _drawContainer(ctx) {
     const c = this.container;
     if (!c) return;
     const t = c.thickness;
-    const r = CONTAINER.cornerRadius;
+    const r = CONTAINER.cornerRadius + 4;
+    const edge = this.theme.wallEdge || 'rgba(255,255,255,0.4)';
+    const wall = this.theme.wall || 'rgba(70,44,120,0.55)';
 
-    // glow shadow
     ctx.save();
-    ctx.shadowColor = 'rgba(255, 209, 102, 0.18)';
-    ctx.shadowBlur = 30;
 
-    // back panel inside walls (subtle)
-    const grad = ctx.createLinearGradient(0, c.interiorTop, 0, c.interiorBottom);
-    grad.addColorStop(0, 'rgba(255, 255, 255, 0.02)');
-    grad.addColorStop(1, 'rgba(255, 255, 255, 0.05)');
-    ctx.fillStyle = grad;
+    // inner well — subtle vertical gradient + soft inner shadow at the bottom
+    const well = ctx.createLinearGradient(0, c.interiorTop, 0, c.interiorBottom);
+    well.addColorStop(0, 'rgba(255,255,255,0.06)');
+    well.addColorStop(0.5, 'rgba(255,255,255,0.02)');
+    well.addColorStop(1, 'rgba(0,0,0,0.16)');
+    ctx.fillStyle = well;
     ctx.fillRect(c.interiorLeft, c.interiorTop, c.width, c.height);
 
-    // walls (rounded outer)
-    ctx.fillStyle = '#3a2466';
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-    ctx.lineWidth = 2;
+    // glassy walls with theme tint + outer glow
+    ctx.shadowColor = edge;
+    ctx.shadowBlur = 22;
+    ctx.fillStyle = wall;
 
-    // left wall
-    this._roundRect(ctx, c.interiorLeft - t, c.interiorTop, t, c.height + t, [r, 0, 0, r]);
-    ctx.fill();
+    // left / right / floor as one rounded U via three rounded rects
+    this._roundRect(ctx, c.interiorLeft - t, c.interiorTop, t, c.height + t, [r, 0, 0, r]); ctx.fill();
+    this._roundRect(ctx, c.interiorRight, c.interiorTop, t, c.height + t, [0, r, r, 0]); ctx.fill();
+    this._roundRect(ctx, c.interiorLeft - t, c.interiorBottom, c.width + 2 * t, t, [0, 0, r, r]); ctx.fill();
+
+    // crisp inner rim light (left, right, floor)
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = edge;
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = 0.9;
+    ctx.beginPath();
+    ctx.moveTo(c.interiorLeft, c.interiorTop);
+    ctx.lineTo(c.interiorLeft, c.interiorBottom);
+    ctx.lineTo(c.interiorRight, c.interiorBottom);
+    ctx.lineTo(c.interiorRight, c.interiorTop);
     ctx.stroke();
-    // right wall
-    this._roundRect(ctx, c.interiorRight, c.interiorTop, t, c.height + t, [0, r, r, 0]);
-    ctx.fill();
-    ctx.stroke();
-    // floor
-    this._roundRect(ctx, c.interiorLeft - t, c.interiorBottom, c.width + 2 * t, t, [0, 0, r, r]);
-    ctx.fill();
-    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // top highlight caps on the two wall tops
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    this._roundRect(ctx, c.interiorLeft - t + 2, c.interiorTop, t - 4, 4, [2, 2, 0, 0]); ctx.fill();
+    this._roundRect(ctx, c.interiorRight + 2, c.interiorTop, t - 4, 4, [2, 2, 0, 0]); ctx.fill();
 
     ctx.restore();
   }
@@ -531,7 +710,7 @@ export class GameScene {
     const y = this.dangerLineY;
     const c = this.container;
     const isFrozen = this.physics.isFrozen();
-    const color = this._overflowing ? '#ef476f' : (isFrozen ? '#7ad7f0' : '#ffd166');
+    const color = this._overflowing ? '#ff4d6d' : (isFrozen ? '#7ad7f0' : this.theme.accent2);
     const alpha = 0.45 + 0.4 * Math.abs(Math.sin(performance.now() * 0.005));
     ctx.save();
     ctx.globalAlpha = this._overflowing ? alpha : 0.4;
@@ -580,17 +759,19 @@ export class GameScene {
     ctx.fill();
     ctx.restore();
 
-    // dampen the visual spin a touch so the cute faces stay mostly readable
-    this._drawFruitAt(ctx, x, y, f.config, f.popScale, f.body.angle * 0.6);
+    // realistic spin damped a touch; squash-&-stretch from impacts
+    this._drawFruitAt(ctx, x, y, f.config, f.scaleX, f.body.angle * 0.6, f.scaleY);
   }
 
-  _drawFruitAt(ctx, x, y, cfg, scale = 1, rot = 0) {
-    const r = cfg.radius * scale;
+  _drawFruitAt(ctx, x, y, cfg, scaleX = 1, rot = 0, scaleY = null) {
+    if (scaleY === null) scaleY = scaleX;
+    const r = cfg.radius;
     const img = AssetManager.get(cfg.sprite);
 
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(rot);
+    ctx.scale(scaleX, scaleY);
 
     if (img && img.complete && img.naturalWidth) {
       // realistic cut-out fills its frame tightly; draw close to the collision diameter
@@ -655,6 +836,18 @@ export class GameScene {
   // ----- HUD -----
   _updateHUD() {
     this.scoreEl.textContent = this.score.score;
+    if (this.levelEl) this.levelEl.textContent = this.level;
+    // level progress bar (toward next threshold)
+    if (this.levelFillEl) {
+      const next = nextThreshold(this.level);
+      if (next === null) {
+        this.levelFillEl.style.width = '100%';
+      } else {
+        const prev = nextThreshold(this.level - 1) ?? 0;
+        const pct = Math.max(0, Math.min(100, ((this.score.score - prev) / (next - prev)) * 100));
+        this.levelFillEl.style.width = pct + '%';
+      }
+    }
   }
 
   _refreshNextPreview() {
@@ -695,9 +888,9 @@ export class GameScene {
     this.shake.trigger(14, 0.6);
     // persist boosters
     EconomyManager.setBoosters(this.boosters);
-    // grant coins based on score
-    const coinReward = Math.round(this.score.score * 0.1 * this.diff.coinReward);
-    if (coinReward > 0) EconomyManager.addCoins(coinReward);
+    // coins were already credited live as they flew into the wallet during play;
+    // show the run total on the game-over screen
+    const coinReward = this.runCoins;
 
     // record high score
     const isNew = SaveManager.setHighScore(this.mode, this.score.score);
@@ -706,6 +899,7 @@ export class GameScene {
       this._mgr.switchTo('gameover', {
         score: this.score.score,
         coins: coinReward,
+        level: this.level,
         newRecord: isNew,
         mode: this.mode,
         revive: () => this._reviveFromAd(),

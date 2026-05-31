@@ -54,19 +54,31 @@
     <!-- HUD (in-game) -->
     <div id="hud" class="hidden">
       <div class="hud-top">
-        <div class="hud-score">
-          <div class="hud-label">SCORE</div>
-          <div id="hudScore">0</div>
+        <div class="hud-scorecard">
+          <div class="hud-score">
+            <div class="hud-label">SCORE</div>
+            <div id="hudScore">0</div>
+          </div>
+          <div class="hud-levelwrap">
+            <div class="hud-levelrow">
+              <span class="hud-leveltag">LV <span id="hudLevel">1</span></span>
+              <span class="hud-best">BEST <span id="hudBest">0</span></span>
+            </div>
+            <div class="hud-levelbar"><div id="hudLevelFill"></div></div>
+          </div>
         </div>
-        <div class="hud-best">
-          <div class="hud-label">BEST</div>
-          <div id="hudBest">0</div>
+
+        <div class="hud-right">
+          <div class="hud-wallet" id="hudWallet">
+            <span class="hud-wallet-coin">🪙</span>
+            <span id="hudWalletCount">0</span>
+          </div>
+          <div class="hud-next">
+            <div class="hud-label">NEXT</div>
+            <div id="hudNext" class="hud-next-circle"></div>
+          </div>
+          <button id="btnPause" class="hud-pause">⏸</button>
         </div>
-        <div class="hud-next">
-          <div class="hud-label">NEXT</div>
-          <div id="hudNext" class="hud-next-circle"></div>
-        </div>
-        <button id="btnPause" class="hud-pause">⏸</button>
       </div>
 
       <div class="hud-boosters">
@@ -81,6 +93,7 @@
         </button>
       </div>
 
+      <div id="levelBanner" class="level-banner hidden">LEVEL 2 · Sunset</div>
       <div id="comboBanner" class="combo-banner hidden">COMBO ×2!</div>
     </div>
 
@@ -101,18 +114,30 @@
 
     <!-- GAME OVER -->
     <div id="gameover" class="overlay hidden">
-      <div class="dialog">
+      <div class="dialog go-dialog">
         <div class="dialog-title" id="goTitle">GAME OVER</div>
-        <div class="go-score">
-          <div class="go-label">Your Score</div>
-          <div class="go-value" id="goScore">0</div>
-          <div class="go-best">Best: <span id="goBest">0</span></div>
+        <div class="go-label">YOUR SCORE</div>
+        <div class="go-value" id="goScore">0</div>
+        <div class="go-stats">
+          <div class="go-stat">
+            <div class="go-stat-v" id="goBest">0</div>
+            <div class="go-stat-l">BEST</div>
+          </div>
+          <div class="go-stat">
+            <div class="go-stat-v" id="goLevel">1</div>
+            <div class="go-stat-l">LEVEL</div>
+          </div>
+          <div class="go-stat">
+            <div class="go-stat-v go-stat-coin">+<span id="goCoins">0</span></div>
+            <div class="go-stat-l">🪙 COINS</div>
+          </div>
         </div>
-        <div class="go-coins">+ <span id="goCoins">0</span> 🪙</div>
-        <button id="btnRevive" class="big-btn revive">📺 REVIVE (Watch Ad)</button>
+        <button id="btnRevive" class="big-btn revive">📺 REVIVE · Watch Ad</button>
         <button id="btnPlayAgain" class="big-btn">↻ PLAY AGAIN</button>
-        <button id="btnShareScore" class="medium-btn">📤 SHARE</button>
-        <button id="btnGoMenu" class="medium-btn">⌂ MENU</button>
+        <div class="go-row">
+          <button id="btnShareScore" class="small-btn">📤 Share</button>
+          <button id="btnGoMenu" class="small-btn">⌂ Menu</button>
+        </div>
       </div>
     </div>
 

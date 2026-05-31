@@ -1,6 +1,7 @@
 // AssetManager — preloads & caches fruit sprite images.
 
 import { FRUITS } from '../config/fruits.js';
+import { THEMES } from '../config/themes.js';
 
 // non-fruit images to preload (backgrounds, banners)
 export const UI_IMAGES = {
@@ -19,6 +20,7 @@ class _AssetManager {
     const paths = [
       ...FRUITS.filter(Boolean).map(f => f.sprite),
       ...Object.values(UI_IMAGES),
+      ...THEMES.map(t => t.bg),
     ];
     const total = paths.length;
     let loaded = 0;

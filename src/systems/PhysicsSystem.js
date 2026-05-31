@@ -9,6 +9,11 @@ export class PhysicsSystem {
     this.engine = M.Engine.create();
     this.world = this.engine.world;
     this.world.gravity.y = PHYSICS.gravity;
+    // Higher solver iterations → accurate stacking + no tunneling on fast drops,
+    // realistic resolution at both high and low impact speeds.
+    this.engine.positionIterations = 10;
+    this.engine.velocityIterations = 8;
+    this.engine.constraintIterations = 4;
 
     this.walls = [];
     this.containerBounds = null;

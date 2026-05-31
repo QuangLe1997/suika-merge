@@ -106,6 +106,25 @@ class _AudioManager {
     this._tone({ freq: 880, type: 'square', dur: 0.06, decay: 0.05, vol: 0.18 });
   }
 
+  // soft thud on landing — pitch lower for bigger fruit, volume from impact (0..1)
+  playThud(intensity = 0.5, level = 1) {
+    if (!this.settings.sfx) return;
+    const base = 150 - level * 7;
+    this._tone({ freq: base, type: 'sine', dur: 0.1, decay: 0.1, vol: 0.06 + intensity * 0.14, freqEnd: base * 0.6 });
+  }
+
+  playLevelUp() {
+    if (!this.settings.sfx) return;
+    [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) =>
+      setTimeout(() => this._tone({ freq: f, type: 'triangle', dur: 0.2, decay: 0.18, vol: 0.3 }), i * 70)
+    );
+  }
+
+  playCoin() {
+    if (!this.settings.sfx) return;
+    this._tone({ freq: 1200 + Math.random() * 300, type: 'square', dur: 0.07, decay: 0.06, vol: 0.12, freqEnd: 1800 });
+  }
+
   playReward() {
     if (!this.settings.sfx) return;
     [659.25, 783.99, 987.77].forEach((f, i) =>

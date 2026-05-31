@@ -25,6 +25,16 @@ export class MergeSystem {
       const b = pair.bodyB;
       const fa = a.fruitRef;
       const fb = b.fruitRef;
+
+      // squash-&-stretch on ANY fruit contact (fruit-fruit or fruit-wall),
+      // scaled by impact speed → realistic deform at high & low speeds
+      const relVx = (a.velocity.x - b.velocity.x);
+      const relVy = (a.velocity.y - b.velocity.y);
+      const impact = Math.hypot(relVx, relVy);
+      if (fa) fa.onImpact(impact);
+      if (fb) fb.onImpact(impact);
+      if (this.cb.onImpact && impact > 6) this.cb.onImpact(fa || fb, impact);
+
       if (!fa || !fb) continue;
       if (fa.merging || fb.merging) continue;
       if (fa.level !== fb.level) continue;
