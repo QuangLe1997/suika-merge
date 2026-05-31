@@ -50,6 +50,23 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
+  /* backdrop shown beside the portrait stage on wide screens */
+  background:
+    radial-gradient(130% 90% at 50% -10%, #1c1450 0%, #0c0822 55%, #050310 100%);
+}
+
+/* The whole game lives in a fixed PORTRAIT stage — on desktop it becomes a
+   centered phone-like column instead of stretching full width. */
+.stage {
+  position: relative;
+  width: 100vw;
+  height: 100vh;            /* fallback */
+  height: 100dvh;
+  max-width: min(100vw, calc(100dvh * 0.62));
+  margin: 0 auto;
+  overflow: hidden;
+  background: #070512;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.05), 0 24px 80px rgba(0,0,0,0.7);
 }
 
 #game {
@@ -420,114 +437,107 @@ html, body {
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
+/* Sleek header — no boxy cards. Glowing type + hairline accents over a soft
+   top veil (a graceful fade, not a panel). */
 .hud-top {
   position: absolute;
-  top: 14px;
-  left: 14px;
-  right: 14px;
+  top: 0; left: 0; right: 0;
+  padding: max(14px, env(safe-area-inset-top)) 18px 18px;
   display: flex;
-  gap: 9px;
   align-items: flex-start;
   justify-content: space-between;
+  gap: 12px;
   pointer-events: auto;
 }
 
-.glass {
-  background: linear-gradient(180deg, rgba(255,255,255,0.13), rgba(255,255,255,0.04));
-  border: 1px solid var(--hairline);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.30), 0 1px 0 rgba(255,255,255,0.14) inset;
+.hud-top::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(6,5,16,0.62) 0%, rgba(6,5,16,0.22) 55%, transparent 100%);
+  pointer-events: none;
 }
 
-/* left scorecard: big score + level bar + best */
-.hud-scorecard {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  padding: 9px 14px;
-  border-radius: 18px;
-  min-width: 150px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.13), rgba(255,255,255,0.04));
-  border: 1px solid var(--hairline);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  box-shadow: 0 8px 22px rgba(0,0,0,0.32), 0 1px 0 rgba(255,255,255,0.14) inset;
-}
+.hud-top > * { position: relative; }
 
-.hud-label {
+.hud-eyebrow {
   font-size: 9px;
-  letter-spacing: 2.5px;
-  color: var(--text-dim);
+  letter-spacing: 3px;
   font-weight: 800;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.5);
 }
 
-.hud-score > div:last-child {
-  font-size: 30px;
+.hud-left { display: flex; flex-direction: column; gap: 1px; }
+
+.hud-score-num {
+  font-size: 40px;
   font-weight: 900;
-  color: #fff;
-  line-height: 1;
-  text-shadow: 0 2px 14px rgba(255, 211, 92, 0.4);
+  line-height: 0.92;
+  letter-spacing: -0.5px;
+  background: linear-gradient(180deg, #ffffff 0%, #ffeec2 52%, var(--accent-2) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 3px 12px rgba(255,211,92,0.45));
 }
 
-.hud-levelrow {
+.hud-levelline {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 9px;
+  margin-top: 6px;
   font-size: 11px;
   font-weight: 800;
-  margin-bottom: 3px;
+  color: rgba(255,255,255,0.7);
 }
 
-.hud-leveltag { color: var(--accent-2); letter-spacing: 0.5px; }
-.hud-best { color: var(--text-dim); font-weight: 700; letter-spacing: 0.5px; }
+.hud-lv b { color: var(--accent-2); }
+.hud-best { color: rgba(255,255,255,0.45); font-weight: 700; }
+.hud-best b { color: rgba(255,255,255,0.8); }
 
 .hud-levelbar {
-  height: 6px;
+  flex: 0 0 64px;
+  height: 5px;
   border-radius: 999px;
-  background: rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.14);
   overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.45) inset;
 }
 
 #hudLevelFill {
+  display: block;
   height: 100%;
   width: 0%;
   border-radius: 999px;
   background: linear-gradient(90deg, var(--accent-2), var(--accent));
-  box-shadow: 0 0 10px rgba(255,211,92,0.6);
-  transition: width 0.4s cubic-bezier(0.2,0.8,0.3,1);
+  box-shadow: 0 0 10px rgba(255,211,92,0.75);
+  transition: width 0.45s cubic-bezier(0.2,0.8,0.3,1);
 }
 
 .hud-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 15px;
 }
 
-.hud-wallet {
-  display: flex;
+.hud-coins {
+  display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 9px 12px;
-  border-radius: 16px;
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 900;
   color: var(--accent-2);
-  background: linear-gradient(180deg, rgba(255,255,255,0.13), rgba(255,255,255,0.04));
-  border: 1px solid var(--hairline);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.30), 0 1px 0 rgba(255,255,255,0.14) inset;
+  text-shadow: 0 2px 10px rgba(255,211,92,0.5);
   transition: transform 0.15s ease;
 }
 
-.hud-wallet-coin { font-size: 16px; }
-
-.hud-wallet.bump { animation: wallet-bump 0.32s cubic-bezier(0.2,0.9,0.3,1.4); }
+.hud-coin-ic { font-size: 16px; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.4)); }
+.hud-coins.bump { animation: wallet-bump 0.34s cubic-bezier(0.2,0.9,0.3,1.4); }
 
 @keyframes wallet-bump {
   0% { transform: scale(1); }
-  40% { transform: scale(1.22); }
+  40% { transform: scale(1.28); }
   100% { transform: scale(1); }
 }
 
@@ -535,41 +545,37 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 6px 10px;
-  border-radius: 16px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.13), rgba(255,255,255,0.04));
-  border: 1px solid var(--hairline);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.30), 0 1px 0 rgba(255,255,255,0.14) inset;
+  gap: 3px;
 }
 
 .hud-next-circle {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: #ddd;
+  width: 36px;
+  height: 36px;
+  display: block;
   background-size: contain;
-  filter: drop-shadow(0 2px 5px rgba(0,0,0,0.35));
+  background-repeat: no-repeat;
+  background-position: center;
+  filter: drop-shadow(0 3px 7px rgba(0,0,0,0.5));
 }
 
 .hud-pause {
-  background: linear-gradient(180deg, rgba(255,255,255,0.13), rgba(255,255,255,0.04));
-  border: 1px solid var(--hairline);
-  border-radius: 16px;
-  width: 46px;
-  height: 46px;
-  font-size: 18px;
-  color: var(--text);
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: #fff;
   cursor: pointer;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.30), 0 1px 0 rgba(255,255,255,0.14) inset;
-  transition: transform 0.12s ease;
+  background: linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.05));
+  border: 1px solid rgba(255,255,255,0.22);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.28) inset;
+  transition: transform 0.12s ease, background 0.2s ease;
 }
 
-.hud-pause:active { transform: scale(0.92); }
+.hud-pause:hover { background: linear-gradient(180deg, rgba(255,255,255,0.26), rgba(255,255,255,0.08)); }
+.hud-pause:active { transform: scale(0.9); }
 
 /* level-up banner */
 .level-banner {

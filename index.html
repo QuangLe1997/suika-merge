@@ -13,6 +13,7 @@
 </head>
 <body>
   <div id="app">
+   <div class="stage">
     <canvas id="game"></canvas>
 
     <!-- SPLASH -->
@@ -52,30 +53,25 @@
     <!-- HUD (in-game) -->
     <div id="hud" class="hidden">
       <div class="hud-top">
-        <div class="hud-scorecard">
-          <div class="hud-score">
-            <div class="hud-label">SCORE</div>
-            <div id="hudScore">0</div>
-          </div>
-          <div class="hud-levelwrap">
-            <div class="hud-levelrow">
-              <span class="hud-leveltag">LV <span id="hudLevel">1</span></span>
-              <span class="hud-best">BEST <span id="hudBest">0</span></span>
-            </div>
-            <div class="hud-levelbar"><div id="hudLevelFill"></div></div>
+        <div class="hud-left">
+          <div class="hud-eyebrow">SCORE</div>
+          <div class="hud-score-num" id="hudScore">0</div>
+          <div class="hud-levelline">
+            <span class="hud-lv">Lv&nbsp;<b id="hudLevel">1</b></span>
+            <span class="hud-levelbar"><span id="hudLevelFill"></span></span>
+            <span class="hud-best">Best&nbsp;<b id="hudBest">0</b></span>
           </div>
         </div>
 
         <div class="hud-right">
-          <div class="hud-wallet" id="hudWallet">
-            <span class="hud-wallet-coin">🪙</span>
-            <span id="hudWalletCount">0</span>
+          <div class="hud-coins" id="hudWallet">
+            <span class="hud-coin-ic">🪙</span><span id="hudWalletCount">0</span>
           </div>
           <div class="hud-next">
-            <div class="hud-label">NEXT</div>
-            <div id="hudNext" class="hud-next-circle"></div>
+            <span class="hud-eyebrow">NEXT</span>
+            <span id="hudNext" class="hud-next-circle"></span>
           </div>
-          <button id="btnPause" class="hud-pause">⏸</button>
+          <button id="btnPause" class="hud-pause" aria-label="Pause">❚❚</button>
         </div>
       </div>
 
@@ -162,6 +158,7 @@
 
     <!-- TOAST -->
     <div id="toast" class="toast"></div>
+   </div>
   </div>
 
   <script type="module" src="src/main.js"></script>

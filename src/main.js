@@ -21,10 +21,10 @@ let offsetY = 0;
 
 function resizeCanvas() {
   dpr = window.devicePixelRatio || 1;
-  const w = window.innerWidth;
-  const h = window.innerHeight;
-  canvas.style.width = w + 'px';
-  canvas.style.height = h + 'px';
+  // size to the STAGE (portrait column), not the whole window
+  const rect = canvas.getBoundingClientRect();
+  const w = Math.round(rect.width) || window.innerWidth;
+  const h = Math.round(rect.height) || window.innerHeight;
   canvas.width = Math.floor(w * dpr);
   canvas.height = Math.floor(h * dpr);
 
@@ -47,6 +47,8 @@ function resizeCanvas() {
 window.addEventListener('resize', resizeCanvas);
 window.addEventListener('orientationchange', resizeCanvas);
 resizeCanvas();
+// recompute once after layout settles (stage size depends on CSS dvh)
+requestAnimationFrame(resizeCanvas);
 
 // ---------- Splash sequence ----------
 // Real asset preload — the progress bar tracks sprite loading.
