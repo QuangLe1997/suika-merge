@@ -520,9 +520,11 @@ export class GameScene {
           M.Body.setPosition(f.body, { x: nx, y: ny });
           M.Body.setVelocity(f.body, { x: f.body.velocity.x * 0.3, y: 0 });
         }
-        // anything launched far above the container interior is a physics-resolution runaway → remove
-        // (legitimate stacking + drop fruits live at y ≥ DROP.spawnY ≈ 64; container interior starts at ≈ 130)
-        if (ny < c.interiorTop - 90) toRemove.push(f);
+        // a runaway is a fruit physically launched OFF the top of the play area
+        // (y well above the visible top at 0). Must NOT depend on container top —
+        // in Hard the box sits lower (~197) while fruits still spawn at y≈64, so a
+        // container-relative threshold would cull every freshly dropped fruit.
+        if (ny < -80) toRemove.push(f);
       }
       for (const f of toRemove) {
         this.factory.destroy(f);
