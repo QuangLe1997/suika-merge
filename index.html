@@ -27,27 +27,25 @@
 
     <!-- MENU -->
     <div id="menu" class="overlay hidden">
-      <div class="menu-inner">
-        <div class="menu-title">SUIKA</div>
-        <div class="menu-subtitle">Watermelon Merge</div>
-        <div class="menu-emoji"><img src="assets/images/11-watermelon.png" alt="Watermelon" /></div>
-        <div class="menu-highscore">High Score: <span id="menuHighScore">0</span></div>
-        <div class="menu-coins">🪙 <span id="menuCoins">0</span></div>
+      <!-- slim top bar: stats + quick icons (keeps the banner art clear) -->
+      <div class="menu-topbar">
+        <div class="menu-chip menu-hs">🏆 <span id="menuHighScore">0</span></div>
+        <div class="menu-tools">
+          <div class="menu-chip menu-coin">🪙 <span id="menuCoins">0</span></div>
+          <button id="btnDaily" class="icon-btn" aria-label="Daily reward">🎁<span class="icon-dot hidden" id="dailyDot"></span></button>
+          <button id="btnSettings" class="icon-btn" aria-label="Settings">⚙</button>
+          <button id="btnShare" class="icon-btn" aria-label="Share">📤</button>
+        </div>
+      </div>
 
+      <!-- bottom dock: difficulty segmented + single big CTA -->
+      <div class="menu-dock">
         <div class="menu-modes" id="menuModes">
           <button class="mode-btn" data-mode="easy">Easy</button>
           <button class="mode-btn active" data-mode="normal">Normal</button>
           <button class="mode-btn" data-mode="hard">Hard</button>
         </div>
-
         <button id="btnPlay" class="big-btn pulse">▶ PLAY</button>
-        <div class="menu-row">
-          <button id="btnDaily" class="small-btn">🎁 Daily</button>
-          <button id="btnSettings" class="small-btn">⚙ Settings</button>
-          <button id="btnShare" class="small-btn">📤 Share</button>
-        </div>
-
-        <div class="menu-footer">Tap left/right to aim · Tap to drop · Merge same fruits!</div>
       </div>
     </div>
 

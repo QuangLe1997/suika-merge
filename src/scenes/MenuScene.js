@@ -12,6 +12,7 @@ export class MenuScene {
     this.modesEl = document.getElementById('menuModes');
     this.highEl = document.getElementById('menuHighScore');
     this.coinsEl = document.getElementById('menuCoins');
+    this.dailyDot = document.getElementById('dailyDot');
 
     this.btnPlay.addEventListener('click', () => this._onPlay());
     this.btnDaily.addEventListener('click', () => this._onDaily());
@@ -45,6 +46,11 @@ export class MenuScene {
     this.modesEl.querySelectorAll('.mode-btn').forEach(b => {
       b.classList.toggle('active', b.dataset.mode === mode);
     });
+    // show a notification dot on the Daily button when a reward is claimable
+    if (this.dailyDot) {
+      const canClaim = EconomyManager.getDailyStatus().canClaim;
+      this.dailyDot.classList.toggle('hidden', !canClaim);
+    }
   }
 
   _onPlay() {
