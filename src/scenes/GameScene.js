@@ -362,7 +362,7 @@ export class GameScene {
       // top-tier reached → quick celebration, then it "ascends": leaves the
       // board for a big bonus, freeing space (reward for skilled merging)
       mergedFruit.ascending = true;
-      this.popups.add('WATERMELON!', PLAY_AREA.width / 2, PLAY_AREA.height * 0.42, { color: this.theme.glow, size: 36, life: 1.3 });
+      this.popups.add(`${cfg.name.toUpperCase()}!`, PLAY_AREA.width / 2, PLAY_AREA.height * 0.42, { color: this.theme.glow, size: 36, life: 1.3 });
       this.particles.flash(x, y, 200, 'rgba(255,255,255,0.9)');
       this.particles.shockwave(x, y, '#ffffff', 260, 6);
       this.shake.trigger(16, 0.45);

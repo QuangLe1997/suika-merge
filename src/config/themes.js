@@ -67,7 +67,7 @@ export const THEMES = [
 
 // Score needed to *reach* each level (1-based). Index 0 → level 1 at score 0.
 // Steeper early curve so a couple of lucky merges don't fast-track you.
-export const LEVEL_THRESHOLDS = [0, 450, 1050, 1850, 2900, 4300, 6100, 8400, 11200, 14600, 18800, 24000];
+export const LEVEL_THRESHOLDS = [0, 450, 1050, 1850, 2900, 4300, 6100, 8400, 11200, 14600, 18800, 24000, 30000, 37000, 45000];
 
 export function levelForScore(score) {
   let lvl = 1;
