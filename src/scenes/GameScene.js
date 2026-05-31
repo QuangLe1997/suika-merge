@@ -258,9 +258,11 @@ export class GameScene {
     // weighted toward smaller fruit; widen range as level rises
     const max = (this.levelDiff && this.levelDiff.dropMax) || DROPPABLE_LEVELS.length;
     const pool = DROPPABLE_LEVELS.slice(0, max);
-    // only a gentle bias toward smaller fruit → drops stay varied, so two of a
-    // kind rarely land together by luck (you have to aim to combine them)
-    const idx = Math.floor(Math.pow(Math.random(), 1.12) * pool.length);
+    // STRONG bias to the smallest fruit. High-tier fruit are something the
+    // player should earn by merging, so they only drop rarely (Suika-style):
+    // with pool of 7 → roughly Cherry 38% · Straw 16% · Grape 12% · Dekopon 10%
+    // · Lemon 9% · Apple 8% · Pear 7%.
+    const idx = Math.floor(Math.pow(Math.random(), 2.0) * pool.length);
     return pool[Math.min(idx, pool.length - 1)];
   }
 
