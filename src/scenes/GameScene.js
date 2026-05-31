@@ -12,6 +12,7 @@ import { ScreenShake } from '../effects/ScreenShake.js';
 import { AudioManager } from '../managers/AudioManager.js';
 import { SaveManager } from '../managers/SaveManager.js';
 import { EconomyManager } from '../managers/EconomyManager.js';
+import { AssetManager } from '../managers/AssetManager.js';
 
 const M = window.Matter;
 
@@ -567,52 +568,56 @@ export class GameScene {
 
   _drawFruit(ctx, f) {
     const { x, y } = f.body.position;
-    this._drawFruitAt(ctx, x, y, f.config, f.popScale, f.body.angle);
+    const r = f.config.radius;
+
+    // soft contact shadow — drawn in world space so it always points down,
+    // independent of the fruit's spin. Low alpha to avoid muddy overlaps in the pile.
+    ctx.save();
+    ctx.globalAlpha = 0.16;
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    ctx.ellipse(x, y + r * 0.7, r * 0.72, r * 0.24, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // dampen the visual spin a touch so the cute faces stay mostly readable
+    this._drawFruitAt(ctx, x, y, f.config, f.popScale, f.body.angle * 0.6);
   }
 
   _drawFruitAt(ctx, x, y, cfg, scale = 1, rot = 0) {
     const r = cfg.radius * scale;
+    const img = AssetManager.get(cfg.sprite);
 
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(rot);
 
-    // outer glow halo
-    ctx.shadowColor = cfg.glow;
-    ctx.shadowBlur = 14;
-
-    // body radial gradient
-    const grad = ctx.createRadialGradient(-r * 0.35, -r * 0.35, r * 0.15, 0, 0, r);
-    grad.addColorStop(0, this._lighten(cfg.glow, 0.25));
-    grad.addColorStop(0.55, cfg.color);
-    grad.addColorStop(1, this._darken(cfg.color, 0.25));
-
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.arc(0, 0, r, 0, Math.PI * 2);
-    ctx.fill();
-
-    // outline
-    ctx.shadowBlur = 0;
-    ctx.strokeStyle = 'rgba(0,0,0,0.25)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // shine highlight
-    ctx.save();
-    ctx.globalAlpha = 0.55;
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.ellipse(-r * 0.32, -r * 0.4, r * 0.28, r * 0.18, -0.6, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-
-    // emoji face on big fruits
-    if (r > 22) {
-      ctx.font = `${Math.floor(r * 1.1)}px -apple-system, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji"`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(cfg.emoji, 0, r * 0.04);
+    if (img && img.complete && img.naturalWidth) {
+      // sprite incl. its white sticker outline sits a touch larger than the collision circle
+      const size = r * 2 * 1.16;
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, -size / 2, -size / 2, size, size);
+    } else {
+      // fallback: simple glossy circle (no colored halo)
+      const grad = ctx.createRadialGradient(-r * 0.35, -r * 0.35, r * 0.15, 0, 0, r);
+      grad.addColorStop(0, this._lighten(cfg.glow, 0.25));
+      grad.addColorStop(0.55, cfg.color);
+      grad.addColorStop(1, this._darken(cfg.color, 0.25));
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(0, 0, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+      ctx.lineWidth = Math.max(2, r * 0.06);
+      ctx.stroke();
+      ctx.save();
+      ctx.globalAlpha = 0.5;
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.ellipse(-r * 0.32, -r * 0.4, r * 0.28, r * 0.18, -0.6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     }
 
     ctx.restore();
@@ -654,7 +659,13 @@ export class GameScene {
 
   _refreshNextPreview() {
     const cfg = getFruit(this.nextDropLevel);
-    this.nextEl.style.background = `radial-gradient(circle at 30% 30%, ${this._lighten(cfg.glow, 0.25)}, ${cfg.color} 60%, ${this._darken(cfg.color, 0.25)})`;
+    // use the sprite if available, otherwise fall back to a color swatch
+    if (AssetManager.get(cfg.sprite)) {
+      this.nextEl.style.background = `center / contain no-repeat url("${cfg.sprite}")`;
+      this.nextEl.style.boxShadow = 'none';
+    } else {
+      this.nextEl.style.background = `radial-gradient(circle at 30% 30%, ${this._lighten(cfg.glow, 0.25)}, ${cfg.color} 60%, ${this._darken(cfg.color, 0.25)})`;
+    }
   }
 
   _refreshBoosterUI() {

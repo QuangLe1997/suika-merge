@@ -4,6 +4,7 @@
 import { PLAY_AREA } from './config/constants.js';
 import { SceneManager } from './managers/SceneManager.js';
 import { AudioManager } from './managers/AudioManager.js';
+import { AssetManager } from './managers/AssetManager.js';
 import { MenuScene } from './scenes/MenuScene.js';
 import { GameScene } from './scenes/GameScene.js';
 import { GameOverScene } from './scenes/GameOverScene.js';
@@ -48,27 +49,22 @@ window.addEventListener('orientationchange', resizeCanvas);
 resizeCanvas();
 
 // ---------- Splash sequence ----------
-function runSplash() {
-  return new Promise(resolve => {
-    const fill = document.getElementById('splashFill');
-    const splash = document.getElementById('splash');
-    let p = 0;
-    const tick = () => {
-      p += 6 + Math.random() * 9;
-      if (p >= 100) {
-        p = 100;
-        fill.style.width = '100%';
-        setTimeout(() => {
-          splash.classList.add('hidden');
-          resolve();
-        }, 250);
-      } else {
-        fill.style.width = p + '%';
-        setTimeout(tick, 80);
-      }
-    };
-    tick();
+// Real asset preload — the progress bar tracks sprite loading.
+async function runSplash() {
+  const fill = document.getElementById('splashFill');
+  const splash = document.getElementById('splash');
+  const hint = document.querySelector('.splash-hint');
+
+  await AssetManager.preload((loaded, total) => {
+    const pct = Math.round((loaded / total) * 100);
+    fill.style.width = pct + '%';
+    if (hint) hint.textContent = `Loading… ${loaded}/${total}`;
   });
+
+  fill.style.width = '100%';
+  if (hint) hint.textContent = 'Ready!';
+  await new Promise(r => setTimeout(r, 280));
+  splash.classList.add('hidden');
 }
 
 // ---------- Scene registration ----------

@@ -12,11 +12,10 @@ Thumbs.db
 *.log
 /tmp/
 
-# Test artifacts
+# Test artifacts (only root-level PNGs are throwaway screenshots —
+# keep game sprites under assets/)
 .playwright-mcp/
-*.png
-!og-image.png
-!screenshot.png
+/*.png
 
 # Specs (kept locally for reference but not for repo readers)
 # leave specs/ in the repo, they're useful context
