@@ -27,7 +27,7 @@ export const MAX_LEVEL = 11;
 // What levels can the player drop. More types = lower chance two identical
 // fruit land together by luck → mindless/one-spot play piles up instead of
 // auto-clearing, so you must aim to combine.
-export const DROPPABLE_LEVELS = [1, 2, 3, 4, 5, 6];
+export const DROPPABLE_LEVELS = [1, 2, 3, 4, 5, 6, 7];
 
 export function getFruit(level) {
   return FRUITS[level];
