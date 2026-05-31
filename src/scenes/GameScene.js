@@ -617,7 +617,17 @@ export class GameScene {
     // actively aiming), release the fruit at the current spot
     if (this.dropCooldown <= 0 && !this._aiming) {
       this._idle += dt;
-      if (this._idle >= (this._autoDropSec || AUTO_DROP_SEC)) this._tryDrop();
+      if (this._idle >= (this._autoDropSec || AUTO_DROP_SEC)) {
+        // idle auto-drop lands at a RANDOM spot — doing nothing scatters fruit
+        // instead of neatly stacking one column, so you must actually aim to win
+        if (this.container) {
+          const r = getFruit(this.currentDropLevel).radius;
+          const lo = this.container.interiorLeft + r + 2;
+          const hi = this.container.interiorRight - r - 2;
+          this.dropX = lo + Math.random() * (hi - lo);
+        }
+        this._tryDrop();
+      }
     }
 
     // physics

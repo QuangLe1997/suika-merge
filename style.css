@@ -25,6 +25,17 @@
 
   --shadow-deep: 0 24px 70px rgba(0, 0, 0, 0.5);
   --shadow-card: 0 18px 50px rgba(0, 0, 0, 0.45), 0 2px 0 rgba(255,255,255,0.06) inset;
+
+  /* rounded, playful display font for titles / score / banners / buttons */
+  --font-display: 'Fredoka', -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+}
+
+/* apply the display font to all the "wow" / chrome text */
+.splash-title, .menu-chip, .hud-eyebrow, .hud-score-num, .hud-lv, .hud-best,
+.hud-coins, .dialog-title, .go-label, .go-value, .go-stat-v, .go-stat-l,
+.combo-banner, .level-banner, .big-btn, .medium-btn, .small-btn, .mode-btn,
+.daily-chal, .stats-sec-title {
+  font-family: var(--font-display);
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -685,16 +696,15 @@ html, body {
   top: 36%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 62px;
-  font-weight: 900;
-  letter-spacing: 2px;
+  font-size: 64px;
+  font-weight: 700;
+  letter-spacing: 1px;
   color: #fff;
-  -webkit-text-stroke: 1.5px rgba(90, 30, 10, 0.35);
   text-shadow:
-    0 0 10px #fff,
-    0 0 22px var(--accent-2),
-    0 0 44px var(--accent),
-    0 5px 16px rgba(0, 0, 0, 0.55);
+    0 0 12px #fff,
+    0 0 26px var(--accent-2),
+    0 0 50px var(--accent),
+    0 4px 10px rgba(0, 0, 0, 0.6);
   pointer-events: none;
   z-index: 6;
 }
@@ -810,7 +820,6 @@ html, body {
 
 #goTitle.newrec {
   color: #fff;
-  -webkit-text-stroke: 1.5px rgba(90, 30, 10, 0.3);
   animation: record-glow 1.3s ease-in-out infinite;
 }
 

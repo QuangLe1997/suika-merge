@@ -9,11 +9,11 @@ export const FRUITS = [
   // modestly so they feel premium without eating the player's space. The
   // Watermelon (max) is whisked off the board for a big bonus, so its on-board
   // size barely matters.
-  { level: 1,  name: 'Cherry',     emoji: '🍒', radius: 18, score: 1,  color: '#e63946', glow: '#ff6b8c', sprite: SPRITE_BASE + '01-cherry.png' },
-  { level: 2,  name: 'Strawberry', emoji: '🍓', radius: 22, score: 3,  color: '#f08080', glow: '#ff9aa2', sprite: SPRITE_BASE + '02-strawberry.png' },
-  { level: 3,  name: 'Grape',      emoji: '🍇', radius: 27, score: 6,  color: '#9d4edd', glow: '#c77dff', sprite: SPRITE_BASE + '03-grape.png' },
-  { level: 4,  name: 'Dekopon',    emoji: '🍊', radius: 32, score: 10, color: '#ff9933', glow: '#ffba6e', sprite: SPRITE_BASE + '04-dekopon.png' },
-  { level: 5,  name: 'Lemon',      emoji: '🍋', radius: 38, score: 15, color: '#ffb700', glow: '#ffdd66', sprite: SPRITE_BASE + '05-lemon.png' },
+  { level: 1,  name: 'Cherry',     emoji: '🍒', radius: 21, score: 1,  color: '#e63946', glow: '#ff6b8c', sprite: SPRITE_BASE + '01-cherry.png' },
+  { level: 2,  name: 'Strawberry', emoji: '🍓', radius: 26, score: 3,  color: '#f08080', glow: '#ff9aa2', sprite: SPRITE_BASE + '02-strawberry.png' },
+  { level: 3,  name: 'Grape',      emoji: '🍇', radius: 30, score: 6,  color: '#9d4edd', glow: '#c77dff', sprite: SPRITE_BASE + '03-grape.png' },
+  { level: 4,  name: 'Dekopon',    emoji: '🍊', radius: 35, score: 10, color: '#ff9933', glow: '#ffba6e', sprite: SPRITE_BASE + '04-dekopon.png' },
+  { level: 5,  name: 'Lemon',      emoji: '🍋', radius: 40, score: 15, color: '#ffb700', glow: '#ffdd66', sprite: SPRITE_BASE + '05-lemon.png' },
   { level: 6,  name: 'Apple',      emoji: '🍎', radius: 44, score: 24, color: '#d62828', glow: '#ff5959', sprite: SPRITE_BASE + '06-apple.png' },
   { level: 7,  name: 'Pear',       emoji: '🍐', radius: 49, score: 36, color: '#c5e063', glow: '#dfff89', sprite: SPRITE_BASE + '07-pear.png' },
   { level: 8,  name: 'Peach',      emoji: '🍑', radius: 54, score: 52, color: '#ffb6a3', glow: '#ffd1c1', sprite: SPRITE_BASE + '08-peach.png' },
