@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#1a1033" />
+  <meta name="description" content="Suika Watermelon Merge — H5 casual puzzle game" />
+  <title>Suika Merge — Watermelon Game</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8D%89%3C/text%3E%3C/svg%3E" />
+  <script src="https://cdn.jsdelivr.net/npm/matter-js@0.20.0/build/matter.min.js"></script>
+</head>
+<body>
+  <div id="app">
+    <canvas id="game"></canvas>
+
+    <!-- SPLASH -->
+    <div id="splash" class="overlay">
+      <div class="splash-inner">
+        <div class="splash-logo">🍉</div>
+        <div class="splash-title">SUIKA MERGE</div>
+        <div class="splash-bar"><div class="splash-bar-fill" id="splashFill"></div></div>
+        <div class="splash-hint">Loading…</div>
+      </div>
+    </div>
+
+    <!-- MENU -->
+    <div id="menu" class="overlay hidden">
+      <div class="menu-inner">
+        <div class="menu-title">SUIKA</div>
+        <div class="menu-subtitle">Watermelon Merge</div>
+        <div class="menu-emoji">🍉</div>
+        <div class="menu-highscore">High Score: <span id="menuHighScore">0</span></div>
+        <div class="menu-coins">🪙 <span id="menuCoins">0</span></div>
+
+        <div class="menu-modes" id="menuModes">
+          <button class="mode-btn" data-mode="easy">Easy</button>
+          <button class="mode-btn active" data-mode="normal">Normal</button>
+          <button class="mode-btn" data-mode="hard">Hard</button>
+        </div>
+
+        <button id="btnPlay" class="big-btn pulse">▶ PLAY</button>
+        <div class="menu-row">
+          <button id="btnDaily" class="small-btn">🎁 Daily</button>
+          <button id="btnSettings" class="small-btn">⚙ Settings</button>
+          <button id="btnShare" class="small-btn">📤 Share</button>
+        </div>
+
+        <div class="menu-footer">Tap left/right to aim · Tap to drop · Merge same fruits!</div>
+      </div>
+    </div>
+
+    <!-- HUD (in-game) -->
+    <div id="hud" class="hidden">
+      <div class="hud-top">
+        <div class="hud-score">
+          <div class="hud-label">SCORE</div>
+          <div id="hudScore">0</div>
+        </div>
+        <div class="hud-best">
+          <div class="hud-label">BEST</div>
+          <div id="hudBest">0</div>
+        </div>
+        <div class="hud-next">
+          <div class="hud-label">NEXT</div>
+          <div id="hudNext" class="hud-next-circle"></div>
+        </div>
+        <button id="btnPause" class="hud-pause">⏸</button>
+      </div>
+
+      <div class="hud-boosters">
+        <button class="booster-btn" data-booster="hammer" title="Hammer — Remove any fruit">
+          🔨<span class="booster-count" id="boostHammer">3</span>
+        </button>
+        <button class="booster-btn" data-booster="bomb" title="Bomb — Destroy area">
+          💣<span class="booster-count" id="boostBomb">1</span>
+        </button>
+        <button class="booster-btn" data-booster="freeze" title="Freeze danger timer">
+          ❄️<span class="booster-count" id="boostFreeze">2</span>
+        </button>
+      </div>
+
+      <div id="comboBanner" class="combo-banner hidden">COMBO ×2!</div>
+    </div>
+
+    <!-- PAUSE -->
+    <div id="pause" class="overlay hidden">
+      <div class="dialog">
+        <div class="dialog-title">PAUSED</div>
+        <button id="btnResume" class="big-btn">Resume</button>
+        <button id="btnRestart" class="medium-btn">Restart</button>
+        <button id="btnToMenu" class="medium-btn">Main Menu</button>
+        <div class="dialog-row">
+          <label><input type="checkbox" id="optMusic" checked /> Music</label>
+          <label><input type="checkbox" id="optSfx" checked /> SFX</label>
+          <label><input type="checkbox" id="optVibe" checked /> Vibe</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- GAME OVER -->
+    <div id="gameover" class="overlay hidden">
+      <div class="dialog">
+        <div class="dialog-title" id="goTitle">GAME OVER</div>
+        <div class="go-score">
+          <div class="go-label">Your Score</div>
+          <div class="go-value" id="goScore">0</div>
+          <div class="go-best">Best: <span id="goBest">0</span></div>
+        </div>
+        <div class="go-coins">+ <span id="goCoins">0</span> 🪙</div>
+        <button id="btnRevive" class="big-btn revive">📺 REVIVE (Watch Ad)</button>
+        <button id="btnPlayAgain" class="big-btn">↻ PLAY AGAIN</button>
+        <button id="btnShareScore" class="medium-btn">📤 SHARE</button>
+        <button id="btnGoMenu" class="medium-btn">⌂ MENU</button>
+      </div>
+    </div>
+
+    <!-- DAILY REWARD -->
+    <div id="daily" class="overlay hidden">
+      <div class="dialog">
+        <div class="dialog-title">DAILY REWARD</div>
+        <div class="daily-grid" id="dailyGrid"></div>
+        <div class="daily-msg" id="dailyMsg"></div>
+        <button id="btnDailyClaim" class="big-btn">CLAIM</button>
+        <button id="btnDailyClose" class="medium-btn">Close</button>
+      </div>
+    </div>
+
+    <!-- AD OVERLAY (mock) -->
+    <div id="adOverlay" class="overlay hidden">
+      <div class="ad-box">
+        <div class="ad-tag">AD</div>
+        <div class="ad-title" id="adTitle">Watch a short ad…</div>
+        <div class="ad-progress"><div id="adProgress"></div></div>
+        <button id="adSkip" class="medium-btn hidden">Skip</button>
+      </div>
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast" class="toast"></div>
+  </div>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
