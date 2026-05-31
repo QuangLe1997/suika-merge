@@ -22,6 +22,10 @@ const M = window.Matter;
 // auto-drop the held fruit if the player is idle this long (seconds)
 const AUTO_DROP_SEC = 4;
 
+// spawn weights per fruit level — low tiers common, lv4→7 taper off sharply
+// (high-tier fruit must be earned by merging, so they drop rarely)
+const DROP_WEIGHTS = { 1: 40, 2: 22, 3: 14, 4: 9, 5: 6, 6: 4, 7: 2.5 };
+
 export class GameScene {
   constructor() {
     this.hudEl = document.getElementById('hud');
@@ -258,12 +262,17 @@ export class GameScene {
     // weighted toward smaller fruit; widen range as level rises
     const max = (this.levelDiff && this.levelDiff.dropMax) || DROPPABLE_LEVELS.length;
     const pool = DROPPABLE_LEVELS.slice(0, max);
-    // STRONG bias to the smallest fruit. High-tier fruit are something the
-    // player should earn by merging, so they only drop rarely (Suika-style):
-    // with pool of 7 → roughly Cherry 38% · Straw 16% · Grape 12% · Dekopon 10%
-    // · Lemon 9% · Apple 8% · Pear 7%.
-    const idx = Math.floor(Math.pow(Math.random(), 2.0) * pool.length);
-    return pool[Math.min(idx, pool.length - 1)];
+    // explicit per-tier weights → low tiers dominate and lv4→7 taper off
+    // sharply (each rarer than the last). Full pool ≈ Cherry 41% · Straw 23%
+    // · Grape 14% · Dekopon 9% · Lemon 6% · Apple 4% · Pear 2.6%.
+    let total = 0;
+    for (const lv of pool) total += (DROP_WEIGHTS[lv] || 1);
+    let r = Math.random() * total;
+    for (const lv of pool) {
+      r -= (DROP_WEIGHTS[lv] || 1);
+      if (r <= 0) return lv;
+    }
+    return pool[0];
   }
 
   _tryDrop() {
