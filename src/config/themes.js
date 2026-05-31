@@ -66,7 +66,8 @@ export const THEMES = [
 ];
 
 // Score needed to *reach* each level (1-based). Index 0 → level 1 at score 0.
-export const LEVEL_THRESHOLDS = [0, 250, 600, 1100, 1800, 2800, 4200, 6000, 8500, 12000, 16500, 22000];
+// Steeper early curve so a couple of lucky merges don't fast-track you.
+export const LEVEL_THRESHOLDS = [0, 450, 1050, 1850, 2900, 4300, 6100, 8400, 11200, 14600, 18800, 24000];
 
 export function levelForScore(score) {
   let lvl = 1;
@@ -87,9 +88,10 @@ export function themeForLevel(level) {
 // Difficulty knobs derived from level — gentle ramp, never brutal.
 export function difficultyForLevel(level) {
   return {
-    // which fruit levels can drop — starts narrow, widens with level
+    // how many fruit types can drop — start with FOUR (was 3) and reach all
+    // five quickly, so drops are varied and you can't just stack one column
     dropMin: 1,
-    dropMax: Math.min(5, 2 + Math.ceil(level / 2)),
+    dropMax: Math.min(5, 3 + level),
     // danger grace shrinks each level (floors a touch lower than before)
     dangerHoldMul: Math.max(0.5, 1 - (level - 1) * 0.05),
     // auto-drop countdown gets FASTER as you climb: 4.0s → 1.6s

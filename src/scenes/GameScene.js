@@ -258,8 +258,9 @@ export class GameScene {
     // weighted toward smaller fruit; widen range as level rises
     const max = (this.levelDiff && this.levelDiff.dropMax) || DROPPABLE_LEVELS.length;
     const pool = DROPPABLE_LEVELS.slice(0, max);
-    // mild bias toward lower levels (keeps the game flowing & scoring)
-    const idx = Math.floor(Math.pow(Math.random(), 1.35) * pool.length);
+    // only a gentle bias toward smaller fruit → drops stay varied, so two of a
+    // kind rarely land together by luck (you have to aim to combine them)
+    const idx = Math.floor(Math.pow(Math.random(), 1.12) * pool.length);
     return pool[Math.min(idx, pool.length - 1)];
   }
 
