@@ -9,9 +9,9 @@ export const PLAY_AREA = {
 // container (the open box)
 export const CONTAINER = {
   innerWidth: 380,
-  innerHeight: 560,
+  innerHeight: 520,
   wallThickness: 16,
-  bottomOffset: 30, // gap from bottom of play area
+  bottomOffset: 70, // raised floor leaves a clear bottom dock for the booster bar
   cornerRadius: 14,
 };
 

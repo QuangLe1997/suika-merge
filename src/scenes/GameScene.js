@@ -19,6 +19,9 @@ import { ProgressManager } from '../managers/ProgressManager.js';
 
 const M = window.Matter;
 
+// auto-drop the held fruit if the player is idle this long (seconds)
+const AUTO_DROP_SEC = 4;
+
 export class GameScene {
   constructor() {
     this.hudEl = document.getElementById('hud');
@@ -160,6 +163,10 @@ export class GameScene {
     this.revivesUsed = 0;
     this.coinFly.clear();
 
+    // input + auto-drop
+    this._aiming = false;
+    this._idle = 0; // seconds since last drop / interaction
+
     // boosters: load from economy, but apply min starting per difficulty
     this.boosters = { ...EconomyManager.getBoosters() };
     Object.entries(this.diff.startingBoosters).forEach(([k, v]) => {
@@ -192,35 +199,48 @@ export class GameScene {
       return cx * (PLAY_AREA.width / rect.width);
     };
 
-    const handleMove = (evt) => {
-      if (this.paused || this.gameOver) return;
-      evt.preventDefault();
-      const x = getPos(evt);
-      this._setDropX(x);
-    };
-
+    // Drag-to-aim, release-to-drop:
+    //  • press → grab the fruit (it follows your finger)
+    //  • drag  → slide left/right to line up the shot
+    //  • release → the fruit drops at that spot
+    // (a quick tap still works = press+release in place). Boosters apply on tap.
     const handleDown = (evt) => {
       if (this.paused || this.gameOver) return;
       AudioManager.resume();
       evt.preventDefault();
+      this._idle = 0; // any interaction resets the auto-drop timer
       const rect = canvas.getBoundingClientRect();
       const t = (evt.touches ? evt.touches[0] : evt);
-      const xPx = t.clientX - rect.left;
-      const yPx = t.clientY - rect.top;
-      const x = xPx * (PLAY_AREA.width / rect.width);
-      const y = yPx * (PLAY_AREA.height / rect.height);
-      this._setDropX(x);
+      const x = (t.clientX - rect.left) * (PLAY_AREA.width / rect.width);
 
       if (this.activeBooster) {
+        const y = (t.clientY - rect.top) * (PLAY_AREA.height / rect.height);
         this._applyBoosterAt(x, y);
         return;
       }
+      this._aiming = true;
+      this._setDropX(x);
+    };
 
+    const handleMove = (evt) => {
+      if (this.paused || this.gameOver || !this._aiming) return;
+      evt.preventDefault();
+      this._setDropX(getPos(evt));
+    };
+
+    const handleUp = (evt) => {
+      if (!this._aiming) return;
+      this._aiming = false;
+      if (this.paused || this.gameOver || this.activeBooster) return;
+      if (evt.cancelable) evt.preventDefault();
       this._tryDrop();
     };
 
-    canvas.addEventListener('pointermove', handleMove, { passive: false });
     canvas.addEventListener('pointerdown', handleDown, { passive: false });
+    canvas.addEventListener('pointermove', handleMove, { passive: false });
+    // listen on window so releasing the finger off the canvas still drops
+    window.addEventListener('pointerup', handleUp, { passive: false });
+    window.addEventListener('pointercancel', handleUp, { passive: false });
   }
 
   _setDropX(x) {
@@ -243,6 +263,7 @@ export class GameScene {
 
   _tryDrop() {
     if (this.dropCooldown > 0) return;
+    this._idle = 0; // reset auto-drop timer
     const lvl = this.currentDropLevel;
     const cfg = getFruit(lvl);
     const fruit = this.factory.create(lvl, this.dropX, DROP.spawnY);
@@ -529,6 +550,13 @@ export class GameScene {
     // cooldown
     if (this.dropCooldown > 0) this.dropCooldown = Math.max(0, this.dropCooldown - dt * 1000);
 
+    // auto-drop: if the player doesn't drop within AUTO_DROP_SEC (and isn't
+    // actively aiming), release the fruit at the current spot
+    if (this.dropCooldown <= 0 && !this._aiming) {
+      this._idle += dt;
+      if (this._idle >= AUTO_DROP_SEC) this._tryDrop();
+    }
+
     // physics
     this.physics.update(dt);
 
@@ -784,6 +812,30 @@ export class GameScene {
 
     // current fruit at top (preview)
     this._drawFruitAt(ctx, x, y, cfg, 1, Math.sin(performance.now() * 0.005) * 0.05);
+
+    // auto-drop countdown "clock" ring around the preview (shows in the last 2.5s)
+    const remain = AUTO_DROP_SEC - this._idle;
+    if (this.dropCooldown <= 0 && !this._aiming && remain <= 2.5) {
+      const frac = Math.max(0, remain / AUTO_DROP_SEC); // 1 → 0
+      const rr = cfg.radius + 9;
+      ctx.save();
+      ctx.translate(x, y);
+      // track
+      ctx.globalAlpha = 0.25;
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(0, 0, rr, 0, Math.PI * 2);
+      ctx.stroke();
+      // remaining arc (depletes clockwise from top)
+      ctx.globalAlpha = 0.95;
+      ctx.strokeStyle = remain < 1 ? '#ff4d6d' : this.theme.accent2;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.arc(0, 0, rr, -Math.PI / 2, -Math.PI / 2 + frac * Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
   }
 
   _drawFruit(ctx, f) {

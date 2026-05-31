@@ -609,7 +609,7 @@ html, body {
 
 .hud-boosters {
   position: absolute;
-  bottom: 22px;
+  bottom: max(12px, env(safe-area-inset-bottom));
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -619,9 +619,9 @@ html, body {
 
 .booster-btn {
   position: relative;
-  width: 58px;
-  height: 58px;
-  border-radius: 18px;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
   background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.04));
   border: 1px solid var(--hairline);
   color: var(--text);
@@ -660,19 +660,21 @@ html, body {
   box-shadow: 0 2px 8px rgba(0,0,0,0.4);
 }
 
+/* solid colour + glow (NO background-clip:text — that paints a coloured box on
+   some mobile browsers, especially combined with filters) */
 .combo-banner {
   position: absolute;
   top: 36%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 66px;
+  font-size: 60px;
   font-weight: 900;
   letter-spacing: 3px;
-  background: linear-gradient(180deg, #fff, var(--accent-2));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  filter: drop-shadow(0 0 26px rgba(255, 211, 92, 0.8)) drop-shadow(0 8px 22px rgba(255, 95, 162, 0.6));
+  color: #ffe6a3;
+  text-shadow:
+    0 0 16px rgba(255, 211, 92, 0.9),
+    0 0 38px rgba(255, 95, 162, 0.55),
+    0 4px 14px rgba(0, 0, 0, 0.5);
   pointer-events: none;
   z-index: 6;
 }
