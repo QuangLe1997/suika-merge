@@ -90,7 +90,11 @@ export function difficultyForLevel(level) {
     // which fruit levels can drop — starts narrow, widens with level
     dropMin: 1,
     dropMax: Math.min(5, 2 + Math.ceil(level / 2)),
-    // danger grace shrinks slightly each level (clamped)
-    dangerHoldMul: Math.max(0.6, 1 - (level - 1) * 0.05),
+    // danger grace shrinks each level (floors a touch lower than before)
+    dangerHoldMul: Math.max(0.5, 1 - (level - 1) * 0.05),
+    // auto-drop countdown gets FASTER as you climb: 4.0s → 1.6s
+    autoDropSec: Math.max(1.6, 4 - (level - 1) * 0.28),
+    // fruit fall a little faster at high levels (subtle, keeps escalating)
+    gravityMul: Math.min(1.4, 1 + (level - 1) * 0.035),
   };
 }

@@ -5,17 +5,21 @@ const SPRITE_BASE = 'assets/images/';
 
 export const FRUITS = [
   null, // index 0 unused so level == index
+  // radius curve is COMPRESSED at the top: high-tier ("vip") fruit grow only
+  // modestly so they feel premium without eating the player's space. The
+  // Watermelon (max) is whisked off the board for a big bonus, so its on-board
+  // size barely matters.
   { level: 1,  name: 'Cherry',     emoji: '🍒', radius: 18, score: 1,  color: '#e63946', glow: '#ff6b8c', sprite: SPRITE_BASE + '01-cherry.png' },
-  { level: 2,  name: 'Strawberry', emoji: '🍓', radius: 25, score: 3,  color: '#f08080', glow: '#ff9aa2', sprite: SPRITE_BASE + '02-strawberry.png' },
-  { level: 3,  name: 'Grape',      emoji: '🍇', radius: 33, score: 6,  color: '#9d4edd', glow: '#c77dff', sprite: SPRITE_BASE + '03-grape.png' },
-  { level: 4,  name: 'Dekopon',    emoji: '🍊', radius: 42, score: 10, color: '#ff9933', glow: '#ffba6e', sprite: SPRITE_BASE + '04-dekopon.png' },
-  { level: 5,  name: 'Lemon',      emoji: '🍋', radius: 53, score: 15, color: '#ffb700', glow: '#ffdd66', sprite: SPRITE_BASE + '05-lemon.png' },
-  { level: 6,  name: 'Apple',      emoji: '🍎', radius: 66, score: 21, color: '#d62828', glow: '#ff5959', sprite: SPRITE_BASE + '06-apple.png' },
-  { level: 7,  name: 'Pear',       emoji: '🍐', radius: 80, score: 28, color: '#c5e063', glow: '#dfff89', sprite: SPRITE_BASE + '07-pear.png' },
-  { level: 8,  name: 'Peach',      emoji: '🍑', radius: 96, score: 36, color: '#ffb6a3', glow: '#ffd1c1', sprite: SPRITE_BASE + '08-peach.png' },
-  { level: 9,  name: 'Pineapple',  emoji: '🍍', radius: 114, score: 45, color: '#f9c74f', glow: '#ffe082', sprite: SPRITE_BASE + '09-pineapple.png' },
-  { level: 10, name: 'Melon',      emoji: '🍈', radius: 133, score: 55, color: '#6a994e', glow: '#a7c957', sprite: SPRITE_BASE + '10-melon.png' },
-  { level: 11, name: 'Watermelon', emoji: '🍉', radius: 155, score: 66, color: '#2d6a4f', glow: '#74c69d', sprite: SPRITE_BASE + '11-watermelon.png' },
+  { level: 2,  name: 'Strawberry', emoji: '🍓', radius: 24, score: 3,  color: '#f08080', glow: '#ff9aa2', sprite: SPRITE_BASE + '02-strawberry.png' },
+  { level: 3,  name: 'Grape',      emoji: '🍇', radius: 31, score: 6,  color: '#9d4edd', glow: '#c77dff', sprite: SPRITE_BASE + '03-grape.png' },
+  { level: 4,  name: 'Dekopon',    emoji: '🍊', radius: 39, score: 10, color: '#ff9933', glow: '#ffba6e', sprite: SPRITE_BASE + '04-dekopon.png' },
+  { level: 5,  name: 'Lemon',      emoji: '🍋', radius: 48, score: 15, color: '#ffb700', glow: '#ffdd66', sprite: SPRITE_BASE + '05-lemon.png' },
+  { level: 6,  name: 'Apple',      emoji: '🍎', radius: 58, score: 24, color: '#d62828', glow: '#ff5959', sprite: SPRITE_BASE + '06-apple.png' },
+  { level: 7,  name: 'Pear',       emoji: '🍐', radius: 68, score: 36, color: '#c5e063', glow: '#dfff89', sprite: SPRITE_BASE + '07-pear.png' },
+  { level: 8,  name: 'Peach',      emoji: '🍑', radius: 78, score: 52, color: '#ffb6a3', glow: '#ffd1c1', sprite: SPRITE_BASE + '08-peach.png' },
+  { level: 9,  name: 'Pineapple',  emoji: '🍍', radius: 88, score: 72, color: '#f9c74f', glow: '#ffe082', sprite: SPRITE_BASE + '09-pineapple.png' },
+  { level: 10, name: 'Melon',      emoji: '🍈', radius: 98, score: 96, color: '#6a994e', glow: '#a7c957', sprite: SPRITE_BASE + '10-melon.png' },
+  { level: 11, name: 'Watermelon', emoji: '🍉', radius: 108, score: 130, color: '#2d6a4f', glow: '#74c69d', sprite: SPRITE_BASE + '11-watermelon.png' },
 ];
 
 export const MAX_LEVEL = 11;

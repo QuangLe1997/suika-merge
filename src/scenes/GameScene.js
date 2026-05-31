@@ -1,7 +1,7 @@
 // GameScene — core gameplay loop, rendering, input.
 
-import { PLAY_AREA, CONTAINER, DROP, DIFFICULTY, DANGER_LINE_OFFSET, SCORING } from '../config/constants.js';
-import { FRUITS, getFruit, randomDropLevel, DROPPABLE_LEVELS } from '../config/fruits.js';
+import { PLAY_AREA, CONTAINER, DROP, DIFFICULTY, DANGER_LINE_OFFSET, SCORING, PHYSICS } from '../config/constants.js';
+import { FRUITS, getFruit, randomDropLevel, DROPPABLE_LEVELS, MAX_LEVEL } from '../config/fruits.js';
 import { THEMES, levelForScore, themeForLevel, difficultyForLevel, nextThreshold } from '../config/themes.js';
 import { PhysicsSystem } from '../systems/PhysicsSystem.js';
 import { MergeSystem } from '../systems/MergeSystem.js';
@@ -146,6 +146,8 @@ export class GameScene {
     this.bgPrev = null;          // crossfade source
     this.bgFade = 1;             // 1 = fully on current bg
     this.dangerHoldTime = this.diff.dangerHoldTime * this.levelDiff.dangerHoldMul;
+    this._autoDropSec = this.levelDiff.autoDropSec;
+    this.physics.world.gravity.y = PHYSICS.gravity * this.levelDiff.gravityMul;
 
     // coins earned this run (animated into wallet)
     this.runCoins = 0;
@@ -321,19 +323,46 @@ export class GameScene {
 
     if (newLvl >= 8) this.particles.confetti(x, y, themeCols);
 
-    if (newLvl >= 11) {
-      // ultimate watermelon celebration
-      this.popups.add('WATERMELON!', PLAY_AREA.width / 2, PLAY_AREA.height * 0.42, { color: this.theme.glow, size: 40, life: 1.6 });
-      this.particles.flash(x, y, 240, 'rgba(255,255,255,0.9)');
-      this.particles.shockwave(x, y, '#ffffff', 320, 6);
-      this.particles.confetti(x, y, themeCols);
-      this.particles.confetti(x - 70, y - 30, themeCols);
-      this.particles.confetti(x + 70, y - 30, themeCols);
-      this.shake.trigger(20, 0.55);
-      this._flyCoins(20, x, y);
+    if (newLvl >= MAX_LEVEL && mergedFruit && !mergedFruit.ascending) {
+      // top-tier reached → quick celebration, then it "ascends": leaves the
+      // board for a big bonus, freeing space (reward for skilled merging)
+      mergedFruit.ascending = true;
+      this.popups.add('WATERMELON!', PLAY_AREA.width / 2, PLAY_AREA.height * 0.42, { color: this.theme.glow, size: 36, life: 1.3 });
+      this.particles.flash(x, y, 200, 'rgba(255,255,255,0.9)');
+      this.particles.shockwave(x, y, '#ffffff', 260, 6);
+      this.shake.trigger(16, 0.45);
+      setTimeout(() => this._ascendWatermelon(mergedFruit), 700);
     }
 
     this._updateHUD();
+    this._checkLevelUp();
+  }
+
+  // The max-tier fruit flies off the board for a big bonus + frees up space.
+  _ascendWatermelon(f) {
+    if (!f || !f.body || !this.merge.fruits.has(f)) return;
+    const { x, y } = f.body.position;
+    const cols = this.theme.particles;
+    const bonus = 500;
+
+    this.score.score += bonus;
+    ProgressManager.progressDaily('score', this.score.score, true);
+    this._updateHUD();
+
+    this.particles.flash(x, y, 300, 'rgba(255,255,255,0.95)');
+    this.particles.shockwave(x, y, '#ffffff', 360, 7);
+    this.particles.shockwave(x, y, this.theme.accent2, 300, 4);
+    this.particles.confetti(x, y, cols);
+    this.particles.confetti(x - 70, y, cols);
+    this.particles.confetti(x + 70, y, cols);
+    this.shake.trigger(20, 0.6);
+    this.popups.add(`+${bonus} BONUS!`, PLAY_AREA.width / 2, PLAY_AREA.height * 0.4, { color: '#ffd35c', size: 38, life: 1.8 });
+    AudioManager.playNewRecord();
+
+    this._flyCoins(40, x, y);
+
+    this.factory.destroy(f);
+    this.merge.unregister(f);
     this._checkLevelUp();
   }
 
@@ -426,6 +455,8 @@ export class GameScene {
     const theme = themeForLevel(newLevel);
     this.levelDiff = difficultyForLevel(newLevel);
     this.dangerHoldTime = this.diff.dangerHoldTime * this.levelDiff.dangerHoldMul;
+    this._autoDropSec = this.levelDiff.autoDropSec;
+    this.physics.world.gravity.y = PHYSICS.gravity * this.levelDiff.gravityMul;
 
     // crossfade background if the theme changed
     if (theme.key !== this.theme.key) {
@@ -554,7 +585,7 @@ export class GameScene {
     // actively aiming), release the fruit at the current spot
     if (this.dropCooldown <= 0 && !this._aiming) {
       this._idle += dt;
-      if (this._idle >= AUTO_DROP_SEC) this._tryDrop();
+      if (this._idle >= (this._autoDropSec || AUTO_DROP_SEC)) this._tryDrop();
     }
 
     // physics
@@ -814,9 +845,10 @@ export class GameScene {
     this._drawFruitAt(ctx, x, y, cfg, 1, Math.sin(performance.now() * 0.005) * 0.05);
 
     // auto-drop countdown "clock" ring around the preview (shows in the last 2.5s)
-    const remain = AUTO_DROP_SEC - this._idle;
+    const autoSec = this._autoDropSec || AUTO_DROP_SEC;
+    const remain = autoSec - this._idle;
     if (this.dropCooldown <= 0 && !this._aiming && remain <= 2.5) {
-      const frac = Math.max(0, remain / AUTO_DROP_SEC); // 1 → 0
+      const frac = Math.max(0, remain / autoSec); // 1 → 0
       const rr = cfg.radius + 9;
       ctx.save();
       ctx.translate(x, y);
