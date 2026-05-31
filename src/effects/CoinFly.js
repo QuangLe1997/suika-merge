@@ -2,6 +2,8 @@
 // wallet target, with staggered launch, eased bezier flight, and a flip spin.
 // Coordinates are in play-area space (same as the particle system).
 
+import { AssetManager, COIN_SRC } from '../managers/AssetManager.js';
+
 function easeInOutCubic(t) {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
@@ -69,40 +71,41 @@ export class CoinFly {
   }
 
   draw(ctx) {
+    const img = AssetManager.get(COIN_SRC);
     for (const c of this.coins) {
       if (c.t < 0) continue;
       const r = c.radius;
       ctx.save();
       ctx.translate(c.x, c.y);
-      ctx.scale(Math.max(0.18, c.scaleX), 1);
 
-      // soft glow
+      // soft glow (drawn before the flip scale so it stays round)
       ctx.globalAlpha = 0.5;
       ctx.fillStyle = 'rgba(255, 211, 92, 0.5)';
       ctx.beginPath();
       ctx.arc(0, 0, r * 1.5, 0, Math.PI * 2);
       ctx.fill();
-
       ctx.globalAlpha = 1;
-      // coin body
-      const g = ctx.createRadialGradient(-r * 0.3, -r * 0.3, r * 0.2, 0, 0, r);
-      g.addColorStop(0, '#fff2b8');
-      g.addColorStop(0.5, '#ffd35c');
-      g.addColorStop(1, '#e6a121');
-      ctx.fillStyle = g;
-      ctx.beginPath();
-      ctx.arc(0, 0, r, 0, Math.PI * 2);
-      ctx.fill();
-      // rim
-      ctx.strokeStyle = 'rgba(180, 110, 20, 0.7)';
-      ctx.lineWidth = 1.4;
-      ctx.stroke();
-      // inner ring
-      ctx.strokeStyle = 'rgba(255, 245, 200, 0.8)';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.arc(0, 0, r * 0.62, 0, Math.PI * 2);
-      ctx.stroke();
+
+      ctx.scale(Math.max(0.18, c.scaleX), 1); // flip illusion
+
+      if (img && img.complete && img.naturalWidth) {
+        const s = r * 2.3;
+        ctx.imageSmoothingEnabled = true;
+        ctx.drawImage(img, -s / 2, -s / 2, s, s);
+      } else {
+        // fallback: drawn gold disc
+        const g = ctx.createRadialGradient(-r * 0.3, -r * 0.3, r * 0.2, 0, 0, r);
+        g.addColorStop(0, '#fff2b8');
+        g.addColorStop(0.5, '#ffd35c');
+        g.addColorStop(1, '#e6a121');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(0, 0, r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(180, 110, 20, 0.7)';
+        ctx.lineWidth = 1.4;
+        ctx.stroke();
+      }
       ctx.restore();
     }
   }

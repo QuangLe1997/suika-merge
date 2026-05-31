@@ -126,10 +126,8 @@ html, body {
   font-size: 38px;
   font-weight: 900;
   letter-spacing: 5px;
-  background: linear-gradient(90deg, var(--accent-2), var(--accent), var(--accent-3));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: #ffe9a8;
+  text-shadow: 0 0 14px rgba(255, 211, 92, 0.85), 0 0 32px rgba(255, 95, 162, 0.5), 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 .splash-bar {
@@ -475,11 +473,8 @@ html, body {
   font-weight: 900;
   line-height: 0.92;
   letter-spacing: -0.5px;
-  background: linear-gradient(180deg, #ffffff 0%, #ffeec2 52%, var(--accent-2) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  filter: drop-shadow(0 3px 12px rgba(255,211,92,0.45));
+  color: #fff;
+  text-shadow: 0 1px 0 #ffe9a8, 0 0 14px rgba(255, 211, 92, 0.6), 0 3px 10px rgba(0, 0, 0, 0.5);
 }
 
 .hud-levelline {
@@ -532,7 +527,30 @@ html, body {
   transition: transform 0.15s ease;
 }
 
-.hud-coin-ic { font-size: 16px; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.4)); }
+.hud-coin-ic {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.45));
+  vertical-align: middle;
+}
+
+/* coin sprite inside the menu chip */
+.coin-ic {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.4));
+  vertical-align: middle;
+}
+
+/* small coin sprite in the game-over stat label */
+.coin-ic-sm {
+  width: 13px;
+  height: 13px;
+  object-fit: contain;
+  vertical-align: -2px;
+}
 .hud-coins.bump { animation: wallet-bump 0.34s cubic-bezier(0.2,0.9,0.3,1.4); }
 
 @keyframes wallet-bump {
@@ -667,14 +685,16 @@ html, body {
   top: 36%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 60px;
+  font-size: 62px;
   font-weight: 900;
-  letter-spacing: 3px;
-  color: #ffe6a3;
+  letter-spacing: 2px;
+  color: #fff;
+  -webkit-text-stroke: 1.5px rgba(90, 30, 10, 0.35);
   text-shadow:
-    0 0 16px rgba(255, 211, 92, 0.9),
-    0 0 38px rgba(255, 95, 162, 0.55),
-    0 4px 14px rgba(0, 0, 0, 0.5);
+    0 0 10px #fff,
+    0 0 22px var(--accent-2),
+    0 0 44px var(--accent),
+    0 5px 16px rgba(0, 0, 0, 0.55);
   pointer-events: none;
   z-index: 6;
 }
@@ -713,11 +733,8 @@ html, body {
   font-weight: 900;
   letter-spacing: 4px;
   margin-bottom: 18px;
-  background: linear-gradient(180deg, #fff, var(--accent-2) 60%, var(--accent));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  filter: drop-shadow(0 3px 14px rgba(255, 95, 162, 0.4));
+  color: #fff;
+  text-shadow: 0 1px 0 var(--accent-2), 0 0 16px rgba(255, 211, 92, 0.5), 0 0 30px rgba(255, 95, 162, 0.4), 0 4px 12px rgba(0, 0, 0, 0.45);
 }
 
 .dialog-row {
@@ -792,17 +809,20 @@ html, body {
 .go-row .small-btn { flex: 1; }
 
 #goTitle.newrec {
-  background: linear-gradient(90deg, var(--accent-3), var(--accent-2), var(--accent), var(--accent-3));
-  background-size: 300% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: hue-slide 2s linear infinite;
+  color: #fff;
+  -webkit-text-stroke: 1.5px rgba(90, 30, 10, 0.3);
+  animation: record-glow 1.3s ease-in-out infinite;
 }
 
-@keyframes hue-slide {
-  from { background-position: 0% 50%; }
-  to { background-position: 300% 50%; }
+@keyframes record-glow {
+  0%, 100% {
+    text-shadow: 0 0 10px #fff, 0 0 22px var(--accent-2), 0 0 42px var(--accent-3), 0 4px 12px rgba(0, 0, 0, 0.5);
+    transform: scale(1);
+  }
+  50% {
+    text-shadow: 0 0 16px #fff, 0 0 34px var(--accent), 0 0 64px var(--accent-2), 0 4px 12px rgba(0, 0, 0, 0.5);
+    transform: scale(1.04);
+  }
 }
 
 /* DAILY ------------------------------------------------------ */

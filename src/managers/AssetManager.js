@@ -6,7 +6,10 @@ import { THEMES } from '../config/themes.js';
 // non-fruit images to preload (backgrounds, banners)
 export const UI_IMAGES = {
   menuBg: 'assets/images/menu-bg.webp',
+  coin: 'assets/images/coin.png',
 };
+
+export const COIN_SRC = 'assets/images/coin.png';
 
 class _AssetManager {
   constructor() {
