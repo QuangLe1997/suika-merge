@@ -142,34 +142,49 @@ class _AudioManager {
     this._ensureCtx();
     if (!this.ctx || this.musicOsc) return;
 
-    // simple ambient: two detuned saw waves through a low-pass + slow LFO
+    // warm ambient pad: detuned root + octave + a soft perfect-fifth, through a
+    // low-pass with a slow filter sweep and a gentle "breathing" volume LFO
+    const root = 110;
     const o1 = this.ctx.createOscillator();
     const o2 = this.ctx.createOscillator();
-    o1.type = 'sine';
-    o2.type = 'sine';
-    o1.frequency.value = 110;
-    o2.frequency.value = 110 * 1.005;
+    const o3 = this.ctx.createOscillator(); // perfect fifth, quieter, for warmth
+    o1.type = 'sine'; o2.type = 'sine'; o3.type = 'triangle';
+    o1.frequency.value = root;
+    o2.frequency.value = root * 1.005;
+    o3.frequency.value = root * 1.5;
+
+    const fifthGain = this.ctx.createGain();
+    fifthGain.gain.value = 0.35;
+    o3.connect(fifthGain);
 
     const filter = this.ctx.createBiquadFilter();
     filter.type = 'lowpass';
-    filter.frequency.value = 600;
+    filter.frequency.value = 560;
 
+    // slow filter sweep
     const lfo = this.ctx.createOscillator();
-    lfo.frequency.value = 0.12;
+    lfo.frequency.value = 0.1;
     const lfoGain = this.ctx.createGain();
-    lfoGain.gain.value = 200;
+    lfoGain.gain.value = 220;
     lfo.connect(lfoGain);
     lfoGain.connect(filter.frequency);
 
+    // breathing volume
+    const breath = this.ctx.createOscillator();
+    breath.frequency.value = 0.07;
+    const breathGain = this.ctx.createGain();
+    breathGain.gain.value = 0.035;
+    breath.connect(breathGain);
+    breathGain.connect(this.musicGain.gain);
+
     o1.connect(filter);
     o2.connect(filter);
+    fifthGain.connect(filter);
     filter.connect(this.musicGain);
 
-    o1.start();
-    o2.start();
-    lfo.start();
+    o1.start(); o2.start(); o3.start(); lfo.start(); breath.start();
     this.musicOsc = o1;
-    this.musicNodes = [o2, lfo, filter, lfoGain];
+    this.musicNodes = [o2, o3, fifthGain, lfo, lfoGain, breath, breathGain, filter];
   }
 
   stopMusic() {

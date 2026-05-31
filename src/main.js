@@ -121,3 +121,17 @@ function loop(now) {
 }
 
 boot();
+
+// ---------- PWA service worker ----------
+// network-first SW makes new deploys reach players without a hard refresh,
+// and enables install-to-home-screen + offline play.
+// Skipped on localhost so it never interferes with local development.
+{
+  const host = location.hostname;
+  const isLocal = host === 'localhost' || host === '127.0.0.1' || host === '';
+  if ('serviceWorker' in navigator && !isLocal) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    });
+  }
+}

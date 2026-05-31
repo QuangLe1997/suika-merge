@@ -170,7 +170,7 @@ html, body {
     linear-gradient(to bottom,
       rgba(11, 7, 28, 0.50) 0%,
       transparent 22%),
-    url('assets/images/menu-bg.jpg') center top / cover no-repeat,
+    url('assets/images/menu-bg.webp') center top / cover no-repeat,
     var(--bg-0);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
@@ -933,6 +933,120 @@ html, body {
 .toast.show {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
+}
+
+/* DAILY CHALLENGE chip (menu dock) --------------------------- */
+.daily-chal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 14px;
+  cursor: pointer;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.03));
+  border: 1px solid var(--hairline);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.3), 0 1px 0 rgba(255,255,255,0.14) inset;
+  transition: transform 0.12s ease;
+}
+.daily-chal:active { transform: scale(0.98); }
+.daily-chal.done { border-color: rgba(44,227,176,0.6); box-shadow: 0 0 16px rgba(44,227,176,0.35); }
+.dc-goal { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dc-meta { font-size: 12px; color: var(--accent-2); font-weight: 900; flex-shrink: 0; }
+.daily-chal.done .dc-meta { color: var(--accent-3); }
+
+/* STATS dialog: leaderboard + achievements ------------------- */
+.stats-sec-title {
+  text-align: left;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  font-weight: 800;
+  color: var(--accent-2);
+  margin: 6px 2px 8px;
+}
+.ach-count { color: var(--text-dim); font-weight: 700; letter-spacing: 0; }
+
+.lb-list { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+.lb-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 11px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+  border: 1px solid var(--hairline);
+  font-weight: 800;
+}
+.lb-rank { width: 22px; color: var(--text-dim); font-size: 13px; }
+.lb-row.top .lb-rank { color: var(--accent-2); }
+.lb-score { margin-left: auto; color: #fff; }
+.lb-row.top .lb-score { color: var(--accent-2); }
+.lb-empty { color: var(--text-dim); font-size: 13px; padding: 8px; }
+
+.ach-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.ach-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 4px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
+  border: 1px solid var(--hairline);
+  text-align: center;
+}
+.ach-cell.locked { opacity: 0.38; filter: grayscale(0.7); }
+.ach-cell.unlocked { border-color: rgba(255,211,92,0.5); box-shadow: 0 0 14px rgba(255,211,92,0.2); }
+.ach-ic { font-size: 26px; line-height: 1; }
+.ach-name { font-size: 10px; font-weight: 800; color: #fff; }
+.ach-desc { font-size: 9px; color: var(--text-dim); line-height: 1.2; }
+
+/* achievement toast (richer than the plain toast) */
+.toast.achievement {
+  background: linear-gradient(135deg, rgba(255,211,92,0.95), rgba(255,95,162,0.95));
+  color: #2a0f24;
+  font-weight: 900;
+  border: none;
+}
+
+/* ONBOARDING how-to list ------------------------------------ */
+.how-list {
+  list-style: none;
+  margin: 6px 0 18px;
+  padding: 0;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.how-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+.how-list li span {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.03));
+  border: 1px solid var(--hairline);
 }
 
 /* Responsive tweaks ----------------------------------------- */

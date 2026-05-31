@@ -10,7 +10,7 @@ export const THEMES = [
   {
     key: 'ocean',
     name: 'Ocean',
-    bg: 'assets/images/bg-ocean.jpg',
+    bg: 'assets/images/bg-ocean.webp',
     accent: '#5ad6e8',
     accent2: '#7be0ff',
     glow: '#9bf6ff',
@@ -24,7 +24,7 @@ export const THEMES = [
   {
     key: 'aurora',
     name: 'Aurora',
-    bg: 'assets/images/bg-aurora.jpg',
+    bg: 'assets/images/bg-aurora.webp',
     accent: '#5ff0cf',
     accent2: '#9bffe4',
     glow: '#b9ffe9',
@@ -38,7 +38,7 @@ export const THEMES = [
   {
     key: 'twilight',
     name: 'Twilight',
-    bg: 'assets/images/bg-twilight.jpg',
+    bg: 'assets/images/bg-twilight.webp',
     accent: '#c98bff',
     accent2: '#ff8ee0',
     glow: '#e0aaff',
@@ -52,7 +52,7 @@ export const THEMES = [
   {
     key: 'sunset',
     name: 'Sunset',
-    bg: 'assets/images/bg-sunset.jpg',
+    bg: 'assets/images/bg-sunset.webp',
     accent: '#ffb072',
     accent2: '#ff7da6',
     glow: '#ffd9b0',

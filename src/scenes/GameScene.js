@@ -15,6 +15,7 @@ import { AudioManager } from '../managers/AudioManager.js';
 import { SaveManager } from '../managers/SaveManager.js';
 import { EconomyManager } from '../managers/EconomyManager.js';
 import { AssetManager } from '../managers/AssetManager.js';
+import { ProgressManager } from '../managers/ProgressManager.js';
 
 const M = window.Matter;
 
@@ -282,6 +283,15 @@ export class GameScene {
 
     if (combo >= 2) this._showCombo(combo);
 
+    // progression tracking (stats + daily challenge)
+    ProgressManager.noteMerge(newLvl);
+    ProgressManager.noteCombo(combo);
+    const dDone =
+      ProgressManager.progressDaily('merges', 1) ||
+      (newLvl >= 10 ? ProgressManager.progressDaily('melon', 1) : null) ||
+      ProgressManager.progressDaily('score', this.score.score, true);
+    if (dDone) this._onDailyComplete(dDone);
+
     // earn coins on bigger merges → fly into wallet
     if (newLvl >= 5) {
       const coins = Math.round((newLvl - 4) * 1.5 * (this.diff.coinReward || 1));
@@ -304,6 +314,23 @@ export class GameScene {
 
     this._updateHUD();
     this._checkLevelUp();
+  }
+
+  _onDailyComplete(ch) {
+    this.popups.add('DAILY DONE!', PLAY_AREA.width / 2, PLAY_AREA.height * 0.4, { color: '#2ce3b0', size: 30, life: 1.6 });
+    AudioManager.playReward();
+    this._flyCoins(ch.reward, PLAY_AREA.width / 2, PLAY_AREA.height * 0.45);
+    this._toast(`🎯 Daily Challenge done! +${ch.reward}🪙`);
+  }
+
+  _achToast(a) {
+    const t = document.getElementById('toast');
+    t.textContent = `🏅 ${a.title} unlocked!`;
+    t.classList.add('show', 'achievement');
+    setTimeout(() => {
+      t.classList.remove('show');
+      setTimeout(() => t.classList.remove('achievement'), 300);
+    }, 1800);
   }
 
   _showCombo(n) {
@@ -389,6 +416,7 @@ export class GameScene {
       this.theme = theme;
     }
 
+    ProgressManager.noteLevel(newLevel);
     AudioManager.playLevelUp();
     this.shake.trigger(8, 0.4);
     this.particles.flash(PLAY_AREA.width / 2, PLAY_AREA.height / 2, 320, 'rgba(255,255,255,0.5)');
@@ -907,6 +935,10 @@ export class GameScene {
 
     // record high score
     const isNew = SaveManager.setHighScore(this.mode, this.score.score);
+
+    // lifetime stats + leaderboard + achievements
+    const newlyAch = ProgressManager.recordGame(this.mode, this.score.score, this.level);
+    newlyAch.forEach((a, i) => setTimeout(() => this._achToast(a), 500 + i * 1500));
 
     setTimeout(() => {
       this._mgr.switchTo('gameover', {

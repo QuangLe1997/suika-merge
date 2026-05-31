@@ -5,10 +5,30 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#1a1033" />
-  <meta name="description" content="Suika Watermelon Merge — H5 casual puzzle game" />
+  <meta name="description" content="Suika Merge — a juicy fruit merge puzzle. Drop fruit, merge pairs, reach the watermelon!" />
   <title>Suika Merge — Watermelon Game</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Suika Merge" />
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-180.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png" />
+
+  <!-- Social / Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Suika Merge — Watermelon Game" />
+  <meta property="og:description" content="A juicy fruit merge puzzle. Drop fruit, merge pairs, reach the watermelon!" />
+  <meta property="og:image" content="https://quangle1997.github.io/suika-merge/assets/og-card.jpg" />
+  <meta property="og:url" content="https://quangle1997.github.io/suika-merge/" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Suika Merge — Watermelon Game" />
+  <meta name="twitter:description" content="A juicy fruit merge puzzle. Drop, merge, reach the watermelon!" />
+  <meta name="twitter:image" content="https://quangle1997.github.io/suika-merge/assets/og-card.jpg" />
+
   <link rel="stylesheet" href="style.css" />
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8D%89%3C/text%3E%3C/svg%3E" />
   <script src="https://cdn.jsdelivr.net/npm/matter-js@0.20.0/build/matter.min.js"></script>
 </head>
 <body>
@@ -33,14 +53,19 @@
         <div class="menu-chip menu-hs">🏆 <span id="menuHighScore">0</span></div>
         <div class="menu-tools">
           <div class="menu-chip menu-coin">🪙 <span id="menuCoins">0</span></div>
+          <button id="btnStats" class="icon-btn" aria-label="Stats">🏅</button>
           <button id="btnDaily" class="icon-btn" aria-label="Daily reward">🎁<span class="icon-dot hidden" id="dailyDot"></span></button>
           <button id="btnSettings" class="icon-btn" aria-label="Settings">⚙</button>
           <button id="btnShare" class="icon-btn" aria-label="Share">📤</button>
         </div>
       </div>
 
-      <!-- bottom dock: difficulty segmented + single big CTA -->
+      <!-- bottom dock: daily challenge + difficulty + single big CTA -->
       <div class="menu-dock">
+        <button id="dailyChallengeChip" class="daily-chal">
+          <span class="dc-goal">🎯 <span id="dcLabel">Daily Challenge</span></span>
+          <span class="dc-meta" id="dcMeta"></span>
+        </button>
         <div class="menu-modes" id="menuModes">
           <button class="mode-btn" data-mode="easy">Easy</button>
           <button class="mode-btn active" data-mode="normal">Normal</button>
@@ -143,6 +168,32 @@
         <div class="daily-msg" id="dailyMsg"></div>
         <button id="btnDailyClaim" class="big-btn">CLAIM</button>
         <button id="btnDailyClose" class="medium-btn">Close</button>
+      </div>
+    </div>
+
+    <!-- STATS: leaderboard + achievements -->
+    <div id="stats" class="overlay hidden">
+      <div class="dialog">
+        <div class="dialog-title">STATS</div>
+        <div class="stats-sec-title">🏆 Best Scores</div>
+        <div class="lb-list" id="lbList"></div>
+        <div class="stats-sec-title">🏅 Achievements <span id="achCount" class="ach-count"></span></div>
+        <div class="ach-grid" id="achGrid"></div>
+        <button id="btnStatsClose" class="medium-btn">Close</button>
+      </div>
+    </div>
+
+    <!-- ONBOARDING (first run) -->
+    <div id="onboard" class="overlay hidden">
+      <div class="dialog">
+        <div class="dialog-title">HOW TO PLAY</div>
+        <ul class="how-list">
+          <li><span>👆</span> Move to aim, tap to drop a fruit</li>
+          <li><span>🍒</span> Two same fruits touch → they merge bigger</li>
+          <li><span>🍉</span> Reach the Watermelon &amp; beat your best</li>
+          <li><span>🔨</span> Tap a booster, then tap the board</li>
+        </ul>
+        <button id="btnOnboard" class="big-btn">LET'S PLAY</button>
       </div>
     </div>
 

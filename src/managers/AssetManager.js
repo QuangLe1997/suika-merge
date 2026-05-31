@@ -5,7 +5,7 @@ import { THEMES } from '../config/themes.js';
 
 // non-fruit images to preload (backgrounds, banners)
 export const UI_IMAGES = {
-  menuBg: 'assets/images/menu-bg.jpg',
+  menuBg: 'assets/images/menu-bg.webp',
 };
 
 class _AssetManager {
