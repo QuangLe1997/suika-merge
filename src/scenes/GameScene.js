@@ -608,30 +608,32 @@ export class GameScene {
   }
 
   _drawBackground(ctx, W, H) {
-    // base fallback gradient (also shows while images load)
-    const grad = ctx.createLinearGradient(0, 0, 0, H);
-    grad.addColorStop(0, '#1a1140');
-    grad.addColorStop(0.55, '#120a30');
-    grad.addColorStop(1, '#080418');
-    ctx.fillStyle = grad;
+    // deep, neutral base — keeps the field dark so fruit always read clearly
+    ctx.fillStyle = '#070512';
     ctx.fillRect(0, 0, W, H);
 
-    // previous theme image fading out
+    // decorative theme image, drawn DIMMED so it never competes with fruit
+    const dim = this.theme.dim ?? 0.5;
     if (this.bgPrev && this.bgFade < 1) {
-      ctx.globalAlpha = 1;
+      ctx.globalAlpha = dim;
       this._drawImageCover(ctx, this.bgPrev, W, H);
     }
-    // current theme image fading in
     if (this.bgImg && this.bgImg.complete && this.bgImg.naturalWidth) {
-      ctx.globalAlpha = this.bgPrev ? this.bgFade : 1;
+      ctx.globalAlpha = (this.bgPrev ? this.bgFade : 1) * dim;
       this._drawImageCover(ctx, this.bgImg, W, H);
-      ctx.globalAlpha = 1;
     }
+    ctx.globalAlpha = 1;
 
-    // readability scrim (darken toward center where the pile sits)
-    const scrim = ctx.createRadialGradient(W / 2, H * 0.55, H * 0.18, W / 2, H * 0.55, H * 0.75);
-    scrim.addColorStop(0, this.theme.scrim || 'rgba(13,8,32,0.5)');
-    scrim.addColorStop(1, 'rgba(8,5,20,0.2)');
+    // gentle dark veil over everything (calm, low-glare, easy on the eyes)
+    ctx.fillStyle = 'rgba(8, 6, 18, 0.32)';
+    ctx.fillRect(0, 0, W, H);
+
+    // strong vignette: darkest right over the play field → fruit pop, edges keep
+    // a hint of the themed art for atmosphere
+    const scrim = ctx.createRadialGradient(W / 2, H * 0.56, H * 0.10, W / 2, H * 0.56, H * 0.85);
+    scrim.addColorStop(0, this.theme.scrim || 'rgba(7,9,20,0.7)');
+    scrim.addColorStop(0.6, 'rgba(7,7,18,0.45)');
+    scrim.addColorStop(1, 'rgba(5,4,14,0.05)');
     ctx.fillStyle = scrim;
     ctx.fillRect(0, 0, W, H);
   }
@@ -654,11 +656,12 @@ export class GameScene {
 
     ctx.save();
 
-    // inner well — subtle vertical gradient + soft inner shadow at the bottom
+    // inner well — DARK play field so the fruit always pops, with a faint
+    // theme tint at the very top for atmosphere
     const well = ctx.createLinearGradient(0, c.interiorTop, 0, c.interiorBottom);
-    well.addColorStop(0, 'rgba(255,255,255,0.06)');
-    well.addColorStop(0.5, 'rgba(255,255,255,0.02)');
-    well.addColorStop(1, 'rgba(0,0,0,0.16)');
+    well.addColorStop(0, 'rgba(6, 8, 18, 0.46)');
+    well.addColorStop(0.45, 'rgba(4, 5, 14, 0.58)');
+    well.addColorStop(1, 'rgba(0, 0, 0, 0.68)');
     ctx.fillStyle = well;
     ctx.fillRect(c.interiorLeft, c.interiorTop, c.width, c.height);
 
