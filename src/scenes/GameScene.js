@@ -269,7 +269,22 @@ export class GameScene {
     this._idle = 0; // reset auto-drop timer
     const lvl = this.currentDropLevel;
     const cfg = getFruit(lvl);
-    const fruit = this.factory.create(lvl, this.dropX, DROP.spawnY);
+    // Anti-spam jitter that ESCALATES when you keep dropping in the same place.
+    // Varied/aimed drops → tiny jitter (precise). Mashing one spot → the spread
+    // grows fast so fruit scatter instead of stacking into a clean merge tower.
+    this._recentX = this._recentX || [];
+    let sameSpot = 0;
+    for (const px of this._recentX) if (Math.abs(px - this.dropX) < cfg.radius * 1.2) sameSpot++;
+    const jitterScale = 0.35 + sameSpot * 0.7; // 0.35 (varied) → ~2.45 (spamming)
+    let sx = this.dropX + (Math.random() - 0.5) * cfg.radius * jitterScale;
+    if (this.container) {
+      sx = Math.max(this.container.interiorLeft + cfg.radius + 2,
+                    Math.min(this.container.interiorRight - cfg.radius - 2, sx));
+    }
+    this._recentX.push(this.dropX);
+    if (this._recentX.length > 4) this._recentX.shift();
+
+    const fruit = this.factory.create(lvl, sx, DROP.spawnY);
     this.merge.register(fruit);
     AudioManager.playDrop();
     this.particles.drop(this.dropX, DROP.spawnY + cfg.radius, this.theme.glow);

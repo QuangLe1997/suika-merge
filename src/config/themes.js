@@ -88,10 +88,10 @@ export function themeForLevel(level) {
 // Difficulty knobs derived from level — gentle ramp, never brutal.
 export function difficultyForLevel(level) {
   return {
-    // how many fruit types can drop — start with FOUR (was 3) and reach all
-    // five quickly, so drops are varied and you can't just stack one column
+    // how many fruit types can drop — start with FOUR and widen to SIX, so
+    // identical fruit rarely land together by luck (mindless play piles up)
     dropMin: 1,
-    dropMax: Math.min(5, 3 + level),
+    dropMax: Math.min(6, 3 + level),
     // danger grace shrinks each level (floors a touch lower than before)
     dangerHoldMul: Math.max(0.5, 1 - (level - 1) * 0.05),
     // auto-drop countdown gets FASTER as you climb: 4.0s → 1.6s
